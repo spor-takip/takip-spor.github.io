@@ -5,16 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>31. Sıtkı Koçman Rektörlük Kupası</title>
     
-    <!-- FIREBASE AYARLARINIZ -->
     <script>
-        window.__firebase_config = JSON.stringify({
-            apiKey: "AIzaSyDE-aV1fyeod1ZQ5qpe_4d9oUbJ7UOjtrE",
-            authDomain: "spor-takip-3a965.firebaseapp.com",
-            projectId: "spor-takip-3a965",
-            storageBucket: "spor-takip-3a965.firebasestorage.app",
-            messagingSenderId: "906048401888",
-            appId: "1:906048401888:web:ff174b5d6da7beb1a37b85",
-        });
+        // Sadece uygulama kimliği bırakıldı, Firebase config aşağıya taşındı
         window.__app_id = "sitki-kocman-kupasi-v1";
     </script>
 
@@ -37,9 +29,10 @@
     <div id="app"></div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
         // --- İKONLAR ---
         const icons = {
@@ -126,13 +119,20 @@
 
         async function initFirebase() {
             try {
-                const configStr = window.__firebase_config;
-                if (!configStr) {
-                    console.warn("Firebase yapılandırması bulunamadı, yerel modda devam ediliyor.");
-                    return;
-                }
-                const firebaseConfig = JSON.parse(configStr);
+                // SİZİN GİRDİĞİNİZ FIREBASE CONFIG KODU (ENTEGRE EDİLDİ)
+                const firebaseConfig = {
+                    apiKey: "AIzaSyDE-aV1fyeod1ZQ5qpe_4d9oUbJ7UOjtrE",
+                    authDomain: "spor-takip-3a965.firebaseapp.com",
+                    projectId: "spor-takip-3a965",
+                    storageBucket: "spor-takip-3a965.firebasestorage.app",
+                    messagingSenderId: "906048401888",
+                    appId: "1:906048401888:web:ff174b5d6da7beb1a37b85",
+                    measurementId: "G-VY24WDZ389"
+                };
+
                 const app = initializeApp(firebaseConfig);
+                const analytics = getAnalytics(app);
+
                 const auth = getAuth(app);
                 db = getFirestore(app);
 
