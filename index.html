@@ -79,6 +79,21 @@
             f: [{id: 'f1', h: '', a: '', hs: '', as: ''}]
         };
 
+        // --- YARDIMCI GÜVENLİK (SANITIZATION) FONKSİYONU ---
+        // Bu kalkan, Firebase'e gidip gelen kuralların/listelerin bozulmasını matematiksel olarak %100 engeller.
+        function getSafeCategoryData(data) {
+            const safeObj = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
+            if (data && typeof data === 'object' && !Array.isArray(data)) {
+                ['futbol', 'futsal', 'basketbol', 'voleybol'].forEach(key => {
+                    if (Array.isArray(data[key])) {
+                        // Sadece string olan gerçek kuralları alır, boşlukları (null, undefined) atar.
+                        safeObj[key] = data[key].filter(item => typeof item === 'string' && item !== '');
+                    }
+                });
+            }
+            return safeObj;
+        }
+
         // UYGULAMA DURUMU (STATE)
         let state = {
             currentView: 'home', 
@@ -88,8 +103,8 @@
             activeRuleTab: 'futbol', 
             showMatchForm: false, 
             activeCardMatchId: null,
-            rules: { futbol: [], futsal: [], basketbol: [], voleybol: [] }, 
-            predefinedTeams: { basketbol: [], voleybol: [], futbol: [], futsal: [] },
+            rules: getSafeCategoryData({}), 
+            predefinedTeams: getSafeCategoryData({}),
             credentials: { username: 'admin', password: '1234' },
             leagues: {
                 futbol_erkek: { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false },
@@ -119,7 +134,7 @@
 
         async function initFirebase() {
             try {
-                // SİZİN GİRDİĞİNİZ FIREBASE CONFIG KODU (ENTEGRE EDİLDİ)
+                // SİZİN GİRDİĞİNİZ FIREBASE CONFIG KODU
                 const firebaseConfig = {
                     apiKey: "AIzaSyDE-aV1fyeod1ZQ5qpe_4d9oUbJ7UOjtrE",
                     authDomain: "spor-takip-3a965.firebaseapp.com",
@@ -177,14 +192,11 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     state.leagues = data.leagues || state.leagues;
-                    state.predefinedTeams = data.predefinedTeams || state.predefinedTeams;
                     state.credentials = data.credentials || state.credentials;
-                    state.rules = data.rules || state.rules;
                     
-                    // DÜZELTME: Veritabanından gelen kurallar boş bir diziyse, onu doğru Obje yapısına çevirir.
-                    if (Array.isArray(state.rules)) {
-                        state.rules = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
-                    }
+                    // DÜZELTME: Gelen veriler ne kadar bozuk olursa olsun strict modda filtrelenir.
+                    state.rules = getSafeCategoryData(data.rules);
+                    state.predefinedTeams = getSafeCategoryData(data.predefinedTeams);
                     
                     isRemoteUpdate = true;
                     try {
@@ -211,11 +223,12 @@
 
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'appState', 'mainData');
             try {
+                // DÜZELTME: Buluta gönderilirken de veriler kalkan fonksiyonundan zorla geçirilir. JSON.stringify hatası engellenir.
                 const safeStateToSave = JSON.parse(JSON.stringify({
                     leagues: state.leagues,
-                    predefinedTeams: state.predefinedTeams,
+                    predefinedTeams: getSafeCategoryData(state.predefinedTeams),
                     credentials: state.credentials || { username: 'admin', password: '1234' },
-                    rules: state.rules || { futbol: [], futsal: [], basketbol: [], voleybol: [] }
+                    rules: getSafeCategoryData(state.rules)
                 }));
 
                 await setDoc(docRef, safeStateToSave);
@@ -351,9 +364,8 @@
             const val = input.value.trim();
             if(!val) return;
             
-            // DÜZELTME: Kurallar yapısı bozuksa (dizi ise) sıfırla ve objeye çevir.
-            if(!state.rules || Array.isArray(state.rules)) state.rules = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
-            if(!state.rules[state.activeRuleTab]) state.rules[state.activeRuleTab] = [];
+            // Veri yapısı güvenliğe alınır
+            state.rules = getSafeCategoryData(state.rules);
             
             state.rules[state.activeRuleTab].push(val);
             saveState();
@@ -366,6 +378,7 @@
             const newRule = prompt('Kuralı düzenleyin:', currentRule);
             
             if (newRule !== null && newRule.trim() !== '') {
+                state.rules = getSafeCategoryData(state.rules);
                 state.rules[state.activeRuleTab][index] = newRule.trim();
                 saveState();
                 render();
@@ -374,6 +387,7 @@
 
         window.removeRule = function(index) {
             if(!confirm('Bu kuralı silmek istediğinize emin misiniz?')) return;
+            state.rules = getSafeCategoryData(state.rules);
             state.rules[state.activeRuleTab].splice(index, 1);
             saveState();
             render();
@@ -382,14 +396,21 @@
         window.addPredefinedTeam = function(sport, inputId) {
             const val = document.getElementById(inputId).value.trim();
             if(!val) return;
-            if(!state.predefinedTeams) state.predefinedTeams = { basketbol: [], voleybol: [], futbol: [], futsal: [] };
-            if(!state.predefinedTeams[sport]) state.predefinedTeams[sport] = [];
+            
+            state.predefinedTeams = getSafeCategoryData(state.predefinedTeams);
+            
             if(!state.predefinedTeams[sport].includes(val)) {
                 state.predefinedTeams[sport].push(val); saveState(); render();
                 setTimeout(() => { const el = document.getElementById(inputId); if(el) { el.value = ''; el.focus(); } }, 50);
             } else alert("Bu takım zaten listede mevcut.");
         };
-        window.removePredefinedTeam = function(sport, index) { state.predefinedTeams[sport].splice(index, 1); saveState(); render(); };
+        
+        window.removePredefinedTeam = function(sport, index) { 
+            state.predefinedTeams = getSafeCategoryData(state.predefinedTeams);
+            state.predefinedTeams[sport].splice(index, 1); 
+            saveState(); 
+            render(); 
+        };
 
         window.addTeam = function(inputId, groupSelectId, managerId, coachId) {
             const name = document.getElementById(inputId).value.trim();
@@ -503,8 +524,10 @@
                 try {
                     const json = JSON.parse(e.target.result);
                     if (json.leagues) { 
-                        state.leagues = json.leagues; state.predefinedTeams = json.predefinedTeams || state.predefinedTeams;
-                        state.credentials = json.credentials || state.credentials; state.rules = json.rules || state.rules;
+                        state.leagues = json.leagues; 
+                        state.predefinedTeams = getSafeCategoryData(json.predefinedTeams);
+                        state.credentials = json.credentials || state.credentials; 
+                        state.rules = getSafeCategoryData(json.rules);
                         saveState(); render(); alert('Sistem Yedeği Yüklendi!'); 
                     }
                 } catch (er) { alert('Hata: Lütfen geçerli bir yedek dosyası (.json) seçin!'); }
@@ -1136,12 +1159,10 @@
                     if(!state.leagues[k].knockouts) state.leagues[k].knockouts = JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT));
                 });
             }
-            if(!state.predefinedTeams) state.predefinedTeams = { basketbol: [], voleybol: [], futbol: [], futsal: [] };
-            if(!state.predefinedTeams.futbol) state.predefinedTeams.futbol = [];
-            if(!state.predefinedTeams.futsal) state.predefinedTeams.futsal = [];
             
-            // DÜZELTME: Render sırasında yapının bozulmasını engelle
-            if(!state.rules || Array.isArray(state.rules)) state.rules = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
+            // DÜZELTME: Render sırasında yapının bozulmasını tamamen engelle
+            state.rules = getSafeCategoryData(state.rules);
+            state.predefinedTeams = getSafeCategoryData(state.predefinedTeams);
 
             let html = `
                 ${renderSidePanel()}
