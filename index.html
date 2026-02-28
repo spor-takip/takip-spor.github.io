@@ -94,6 +94,16 @@
             return safeObj;
         }
 
+        // --- ŞİFRELEME (HASH) FONKSİYONU ---
+        // Kullanıcının girdiği şifreyi geri döndürülemez SHA-256 formatına çevirir
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         // UYGULAMA DURUMU (STATE)
         let state = {
             currentView: 'home', 
@@ -105,7 +115,8 @@
             activeCardMatchId: null,
             rules: getSafeCategoryData({}), 
             predefinedTeams: getSafeCategoryData({}),
-            credentials: { username: 'admin', password: '1234' },
+            // "1234" şifresinin SHA-256 karşılığı varsayılan olarak eklendi
+            credentials: { username: 'admin', password: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4' },
             leagues: {
                 futbol_erkek: { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false },
                 futsal_erkek: { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false },
@@ -227,7 +238,8 @@
                 const safeStateToSave = JSON.parse(JSON.stringify({
                     leagues: state.leagues,
                     predefinedTeams: getSafeCategoryData(state.predefinedTeams),
-                    credentials: state.credentials || { username: 'admin', password: '1234' },
+                    // credentials içindeki hashlenmiş şifre korunur
+                    credentials: state.credentials || { username: 'admin', password: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4' },
                     rules: getSafeCategoryData(state.rules)
                 }));
 
@@ -345,16 +357,31 @@
             state.isPanelOpen = false; 
             render(); 
         };
-        window.login = function() {
+        
+        window.login = async function() {
             const user = document.getElementById('loginUser').value;
             const pass = document.getElementById('loginPass').value;
             const validUser = state.credentials?.username || 'admin';
-            const validPass = state.credentials?.password || '1234';
+            const validPass = state.credentials?.password || '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4';
 
-            if(user === validUser && pass === validPass) {
+            // Girilen şifreyi hash'e çevir
+            const hashedPass = await hashPassword(pass);
+
+            // Eğer veritabanında eski (düz metin) şifre duruyorsa diye kontrol
+            let isMatch = false;
+            if (validPass.length !== 64) {
+                isMatch = (pass === validPass);
+            } else {
+                isMatch = (hashedPass === validPass);
+            }
+
+            if(user === validUser && isMatch) {
                 state.isLoggedIn = true; render();
-            } else alert('Hatalı kullanıcı adı veya şifre!');
+            } else {
+                alert('Hatalı kullanıcı adı veya şifre!');
+            }
         };
+        
         window.logout = function() { state.isLoggedIn = false; state.currentView = 'home'; render(); };
         
         window.setActiveRuleTab = function(tabId) { state.activeRuleTab = tabId; render(); };
@@ -499,12 +526,16 @@
             }, 150);
         };
 
-        window.changeCredentials = function() {
+        window.changeCredentials = async function() {
             const newUser = document.getElementById('newUsernameInput').value.trim();
             const newPass = document.getElementById('newPasswordInput').value.trim();
             if(!newUser || !newPass) { alert('Kullanıcı adı ve şifre boş bırakılamaz!'); return; }
             if(!state.credentials) state.credentials = {};
-            state.credentials.username = newUser; state.credentials.password = newPass;
+            
+            state.credentials.username = newUser; 
+            // Yeni şifreyi veritabanına düz metin olarak DEĞİL, hashleyerek kaydet
+            state.credentials.password = await hashPassword(newPass);
+            
             saveState(); alert('Giriş bilgileri başarıyla güncellendi!'); render();
         };
         window.startLeague = function() { state.leagues[state.activeSport].isStarted = true; saveState(); render(); };
@@ -1045,7 +1076,8 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Şifre</label>
-                                    <input type="text" id="newPasswordInput" class="w-full border border-gray-300 rounded p-2 text-sm outline-none focus:ring-2 focus:ring-gray-400 bg-white" value="${state.credentials?.password || '1234'}">
+                                    <!-- Değer boşaltıldı (karmaşık hash'in ekranda görünmesini engeller) -->
+                                    <input type="text" id="newPasswordInput" placeholder="Değiştirmek için yeni şifrenizi girin..." class="w-full border border-gray-300 rounded p-2 text-sm outline-none focus:ring-2 focus:ring-gray-400 bg-white" value="">
                                 </div>
                                 <div class="md:col-span-2 flex justify-end mt-2">
                                     <button onclick="window.changeCredentials()" class="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded text-sm font-bold shadow-sm transition">Bilgileri Kaydet</button>
