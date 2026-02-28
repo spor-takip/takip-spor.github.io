@@ -181,6 +181,11 @@
                     state.credentials = data.credentials || state.credentials;
                     state.rules = data.rules || state.rules;
                     
+                    // DÜZELTME: Veritabanından gelen kurallar boş bir diziyse, onu doğru Obje yapısına çevirir.
+                    if (Array.isArray(state.rules)) {
+                        state.rules = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
+                    }
+                    
                     isRemoteUpdate = true;
                     try {
                         render();
@@ -346,7 +351,8 @@
             const val = input.value.trim();
             if(!val) return;
             
-            if(!state.rules) state.rules = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
+            // DÜZELTME: Kurallar yapısı bozuksa (dizi ise) sıfırla ve objeye çevir.
+            if(!state.rules || Array.isArray(state.rules)) state.rules = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
             if(!state.rules[state.activeRuleTab]) state.rules[state.activeRuleTab] = [];
             
             state.rules[state.activeRuleTab].push(val);
@@ -1133,7 +1139,9 @@
             if(!state.predefinedTeams) state.predefinedTeams = { basketbol: [], voleybol: [], futbol: [], futsal: [] };
             if(!state.predefinedTeams.futbol) state.predefinedTeams.futbol = [];
             if(!state.predefinedTeams.futsal) state.predefinedTeams.futsal = [];
-            if(!state.rules) state.rules = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
+            
+            // DÜZELTME: Render sırasında yapının bozulmasını engelle
+            if(!state.rules || Array.isArray(state.rules)) state.rules = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
 
             let html = `
                 ${renderSidePanel()}
