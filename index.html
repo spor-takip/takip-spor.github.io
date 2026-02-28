@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>31. Sıtkı Koçman Rektörlük Kupası</title>
+    
+    <!-- FIREBASE AYARLARINIZ -->
+    <script>
+        window.__firebase_config = JSON.stringify({
+            apiKey: "AIzaSyBQ4KLEc6-TjPc7IX5auAIeOBObUcOKw-4",
+            authDomain: "takip-spor.firebaseapp.com",
+            projectId: "takip-spor",
+            storageBucket: "takip-spor.firebasestorage.app",
+            messagingSenderId: "10412252788",
+            appId: "1:10412252788:web:caf35af46f30aa9b24fb21"
+        });
+        window.__app_id = "sitki-kocman-kupasi-v1";
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .red-card-visual { width: 10px; height: 14px; background-color: #ef4444; display: inline-block; border-radius: 2px; margin-right: 6px; border: 1px solid #b91c1c; vertical-align: middle; }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-800 font-sans">
+
+    <div id="app"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- İKONLAR ---
+        const icons = {
+            home: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+            menu: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
+            trophy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`,
+            activity: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`,
+            dribbble: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M19.13 5.09C15.22 9.14 10 10.44 2.25 10.94"/><path d="M21.75 12.84c-6.62-1.41-12.14 1-16.38 6.32"/><path d="M8.56 2.75c4.37 6 6 9.42 8 17.72"/></svg>`,
+            users: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+            plus: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`,
+            trash: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`,
+            edit: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+            download: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+            upload: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+            clock: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+            settings: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+            x: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+            bracket: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v6h6"/><path d="M3 15v6h6"/><path d="M9 6h6v12H9"/><path d="M15 12h6"/></svg>`,
+            pdf: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M10 12v6"/><path d="M8 14h4"/><path d="M16 18v-6a2 2 0 0 0-2-2h-2"/></svg>`,
+            soccer: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 12l3.5-2.5m-7 0L12 12m0 0v4m-4.5-8.5L5 9m14 0l-2.5-4"/></svg>`
+        };
+
+        const SPORTS = {
+            FUTBOL_ERKEK: { id: 'futbol_erkek', name: 'Futbol Erkek', icon: icons.soccer, color: 'bg-green-700', unit: 'Gol', desc: 'G: 3, B: 1, M: 0 Puan' },
+            FUTSAL_ERKEK: { id: 'futsal_erkek', name: 'Futsal Erkek', icon: icons.soccer, color: 'bg-teal-700', unit: 'Gol', desc: 'G: 3, B: 1, M: 0 Puan' },
+            BASKETBOL_ERKEK: { id: 'basketbol_erkek', name: 'Basketbol Erkek', icon: icons.dribbble, color: 'bg-orange-600', unit: 'Sayı', desc: 'G: 2, M: 1 Puan' },
+            BASKETBOL_KADIN: { id: 'basketbol_kadin', name: 'Basketbol Kadın', icon: icons.dribbble, color: 'bg-orange-500', unit: 'Sayı', desc: 'G: 2, M: 1 Puan' },
+            VOLEYBOL_ERKEK: { id: 'voleybol_erkek', name: 'Voleybol Erkek', icon: icons.users, color: 'bg-blue-600', unit: 'Set', desc: '3-0/3-1: (3p), 3-2: (2p-1p)' },
+            VOLEYBOL_KADIN: { id: 'voleybol_kadin', name: 'Voleybol Kadın', icon: icons.users, color: 'bg-blue-500', unit: 'Set', desc: '3-0/3-1: (3p), 3-2: (2p-1p)' }
+        };
+
+        const INITIAL_TEAMS = [
+            { id: 1, name: 'MUĞLA MYO', group: 'A', manager: '', coach: '' }, 
+            { id: 2, name: 'ULA MYO', group: 'A', manager: '', coach: '' },
+            { id: 21, name: 'FEN EDEBİYAT', group: 'B', manager: '', coach: '' },
+            { id: 22, name: 'GÜZEL SANATLAR', group: 'B', manager: '', coach: '' },
+            { id: 7, name: 'İİBF', group: 'C', manager: '', coach: '' }, 
+            { id: 12, name: 'SAĞLIK BİLİMLERİ FAK.', group: 'D', manager: '', coach: '' }
+        ];
+
+        const DEFAULT_KNOCKOUT = {
+            qf: [{id: 'q1', h: '', a: '', hs: '', as: ''}, {id: 'q2', h: '', a: '', hs: '', as: ''}, {id: 'q3', h: '', a: '', hs: '', as: ''}, {id: 'q4', h: '', a: '', hs: '', as: ''}],
+            sf: [{id: 's1', h: '', a: '', hs: '', as: ''}, {id: 's2', h: '', a: '', hs: '', as: ''}],
+            f: [{id: 'f1', h: '', a: '', hs: '', as: ''}]
+        };
+
+        // UYGULAMA DURUMU (STATE)
+        let state = {
+            currentView: 'home', 
+            isLoggedIn: false,
+            isPanelOpen: false, 
+            activeSport: 'basketbol_erkek',
+            activeRuleTab: 'futbol', 
+            showMatchForm: false, 
+            activeCardMatchId: null,
+            rules: { futbol: [], futsal: [], basketbol: [], voleybol: [] }, 
+            predefinedTeams: { basketbol: [], voleybol: [], futbol: [], futsal: [] },
+            credentials: { username: 'admin', password: '1234' },
+            leagues: {
+                futbol_erkek: { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false },
+                futsal_erkek: { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false },
+                basketbol_erkek: { teams: [...INITIAL_TEAMS], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false },
+                basketbol_kadin: { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false },
+                voleybol_erkek: { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false },
+                voleybol_kadin: { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false }
+            }
+        };
+
+        // --- FIREBASE ENTEGRASYONU VE DURUM TAKİBİ ---
+        let db;
+        let currentUser = null;
+        let isRemoteUpdate = false;
+        let isSaving = false;
+        let saveError = null;
+        const appId = window.__app_id || 'default-app-id';
+
+        // Çıkış yaparken kaydedilmeyen veri varsa uyarı ver
+        window.addEventListener('beforeunload', function (e) {
+            if (isSaving) {
+                e.preventDefault();
+                e.returnValue = 'Verileriniz henüz buluta kaydedilmedi. Çıkmak istediğinize emin misiniz?';
+            }
+        });
+
+        async function initFirebase() {
+            try {
+                const configStr = window.__firebase_config;
+                if (!configStr) {
+                    console.warn("Firebase yapılandırması bulunamadı, yerel modda devam ediliyor.");
+                    return;
+                }
+                const firebaseConfig = JSON.parse(configStr);
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                db = getFirestore(app);
+
+                onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                });
+
+                // GÜVENLİ KİMLİK DOĞRULAMA (ÖNCE AUTHENTICATION, SONRA VERİTABANI)
+                try {
+                    const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null;
+                    if (initialAuthToken) {
+                        try {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } catch (tokenError) {
+                            console.warn("Özel token hatası, anonim girişe dönülüyor:", tokenError);
+                            await signInAnonymously(auth);
+                        }
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (authError) {
+                    if (authError.code === 'auth/configuration-not-found') {
+                        console.warn("BİLGİLENDİRME: Firebase Console'da 'Anonymous' (Anonim) giriş aktif değil.");
+                    } else {
+                        console.error("Kimlik doğrulama hatası:", authError);
+                    }
+                }
+
+                // KİMLİK DOĞRULAMASI BİTTİKTEN SONRA VERİTABANINI DİNLE
+                listenToState();
+
+            } catch (error) {
+                console.error("Firebase Başlatma Hatası:", error);
+            }
+        }
+
+        function listenToState() {
+            if (!db) return; 
+            
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'appState', 'mainData');
+            onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    state.leagues = data.leagues || state.leagues;
+                    state.predefinedTeams = data.predefinedTeams || state.predefinedTeams;
+                    state.credentials = data.credentials || state.credentials;
+                    state.rules = data.rules || state.rules;
+                    
+                    isRemoteUpdate = true;
+                    try {
+                        render();
+                    } finally {
+                        isRemoteUpdate = false;
+                    }
+                } else {
+                    // İlk defa girildiğinde veritabanı boşsa anında ilk şablonu kaydet
+                    saveState();
+                }
+            }, (err) => {
+                console.error("Firestore Dinleme Hatası:", err);
+                saveError = "Veritabanı Okuma İzni Yok (Kuralları Kontrol Edin)";
+                if(window.renderSaveStatus) window.renderSaveStatus();
+            });
+        }
+
+        async function saveState() {
+            if (!db || isRemoteUpdate) return; 
+            
+            isSaving = true;
+            if(window.renderSaveStatus) window.renderSaveStatus();
+
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'appState', 'mainData');
+            try {
+                const safeStateToSave = JSON.parse(JSON.stringify({
+                    leagues: state.leagues,
+                    predefinedTeams: state.predefinedTeams,
+                    credentials: state.credentials || { username: 'admin', password: '1234' },
+                    rules: state.rules || { futbol: [], futsal: [], basketbol: [], voleybol: [] }
+                }));
+
+                await setDoc(docRef, safeStateToSave);
+                saveError = null;
+            } catch (error) {
+                console.error("Firestore Kaydetme Hatası:", error);
+                saveError = "Yetki/Kural Hatası veya Kota Dolumu";
+            } finally {
+                isSaving = false;
+                if(window.renderSaveStatus) window.renderSaveStatus();
+            }
+        }
+
+        // --- YARDIMCI FONKSİYONLAR ---
+        function getTeam(id, leagueType) {
+            return state.leagues[leagueType].teams.find(t => t.id == id) || { name: 'Seçilmedi', group: '?', manager: '', coach: '' };
+        }
+
+        function parseFlexibleDate(dateStr) {
+            if (!dateStr) return new Date('');
+            if (!isNaN(dateStr) && parseInt(dateStr, 10) > 30000) {
+                const excelEpoch = new Date(1899, 11, 30);
+                return new Date(excelEpoch.getTime() + parseInt(dateStr, 10) * 86400000);
+            }
+            const parts = dateStr.trim().split(/[\.\-\/]/);
+            if (parts.length === 3) {
+                let day, month, year;
+                if (parts[0].length === 4) { year = parseInt(parts[0], 10); month = parseInt(parts[1], 10) - 1; day = parseInt(parts[2], 10); } 
+                else { day = parseInt(parts[0], 10); month = parseInt(parts[1], 10) - 1; year = parseInt(parts[2], 10); if (year < 100) year += 2000; }
+                const parsed = new Date(year, month, day);
+                if (!isNaN(parsed)) return parsed;
+            }
+            return new Date(dateStr);
+        }
+
+        function parseFlexibleTime(timeStr) {
+            if (!timeStr) return '14:00';
+            timeStr = timeStr.toString().trim();
+            if (!isNaN(timeStr) && timeStr.includes('.')) {
+                const fraction = parseFloat(timeStr);
+                if (fraction >= 0 && fraction < 1) {
+                    const totalMinutes = Math.round(fraction * 24 * 60);
+                    const h = Math.floor(totalMinutes / 60) % 24;
+                    const m = totalMinutes % 60;
+                    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                }
+            }
+            const ampmMatch = timeStr.match(/(\d{1,2})[:\.]?(\d{2})?\s*([AP]M)/i);
+            if (ampmMatch) {
+                let h = parseInt(ampmMatch[1], 10);
+                const m = ampmMatch[2] || '00';
+                const modifier = ampmMatch[3].toUpperCase();
+                if (h === 12) h = 0; if (modifier === 'PM') h += 12;
+                return `${String(h).padStart(2, '0')}:${m}`;
+            }
+            const timeMatch = timeStr.match(/(\d{1,2})[:\.](\d{2})/);
+            if (timeMatch) return `${String(timeMatch[1]).padStart(2, '0')}:${timeMatch[2]}`;
+            
+            const hourMatch = timeStr.match(/^(\d{1,2})$/);
+            if (hourMatch) {
+                 const h = parseInt(hourMatch[1], 10);
+                 if (h >= 0 && h < 24) return `${String(h).padStart(2, '0')}:00`;
+            }
+            return '14:00';
+        }
+
+        function sortFixturesByDate(fixtures) {
+            fixtures.sort((a, b) => parseFlexibleDate(a.date) - parseFlexibleDate(b.date));
+            fixtures.forEach(round => {
+                if(round.matches) {
+                    round.matches.sort((m1, m2) => {
+                        const t1 = m1.time || "00:00";
+                        const t2 = m2.time || "00:00";
+                        return t1.localeCompare(t2);
+                    });
+                }
+            });
+            return fixtures;
+        }
+
+        function formatDateToLeagueString(dateObj) {
+            const dayNames = ['PAZAR', 'PAZARTESİ', 'SALI', 'ÇARŞAMBA', 'PERŞEMBE', 'CUMA', 'CUMARTESİ'];
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const year = dateObj.getFullYear();
+            const dayName = dayNames[dateObj.getDay()];
+            return `${day}.${month}.${year} ${dayName}`;
+        }
+
+        // --- GLOBAL ERİŞİM İÇİN FONKSİYONLARI WİNDOW'A ATA ---
+        
+        // CANLI KAYIT GÖSTERGESİ (UI)
+        window.renderSaveStatus = function() {
+            const el = document.getElementById('save-status');
+            if(!el) return;
+            if(saveError) {
+                el.innerHTML = `<span class="text-red-100 font-bold bg-red-900/60 px-2 py-1.5 rounded shadow-sm flex items-center gap-1" title="${saveError}">⚠️ Hata (Kaydedilemedi)</span>`;
+            } else if(isSaving) {
+                el.innerHTML = `<span class="animate-pulse bg-black/20 px-2 py-1.5 rounded shadow-sm flex items-center gap-1">⏳ Kaydediliyor...</span>`;
+            } else if(db) {
+                el.innerHTML = `<span class="text-green-50 bg-black/20 px-2 py-1.5 rounded shadow-sm flex items-center gap-1">✓ Buluta Kaydedildi</span>`;
+            } else {
+                el.innerHTML = `<span class="text-white/70">Bağlanıyor...</span>`;
+            }
+        };
+
+        window.setActiveSport = function(id) { state.activeSport = id; render(); };
+        window.toggleMatchForm = function() { state.showMatchForm = !state.showMatchForm; render(); };
+        window.toggleView = function(v) { state.currentView = v; render(); };
+        window.togglePanel = function() { state.isPanelOpen = !state.isPanelOpen; render(); };
+        window.handleNav = function(v, s = null) { 
+            if(v) state.currentView = v; 
+            if(s) state.activeSport = s; 
+            state.isPanelOpen = false; 
+            render(); 
+        };
+        window.login = function() {
+            const user = document.getElementById('loginUser').value;
+            const pass = document.getElementById('loginPass').value;
+            const validUser = state.credentials?.username || 'admin';
+            const validPass = state.credentials?.password || '1234';
+
+            if(user === validUser && pass === validPass) {
+                state.isLoggedIn = true; render();
+            } else alert('Hatalı kullanıcı adı veya şifre!');
+        };
+        window.logout = function() { state.isLoggedIn = false; state.currentView = 'home'; render(); };
+        
+        window.setActiveRuleTab = function(tabId) { state.activeRuleTab = tabId; render(); };
+        window.addRule = function() {
+            const input = document.getElementById('newRuleInput');
+            if(!input) return;
+            const val = input.value.trim();
+            if(!val) return;
+            
+            if(!state.rules) state.rules = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
+            if(!state.rules[state.activeRuleTab]) state.rules[state.activeRuleTab] = [];
+            
+            state.rules[state.activeRuleTab].push(val);
+            saveState();
+            render();
+            setTimeout(() => { const el = document.getElementById('newRuleInput'); if(el) el.focus(); }, 50);
+        };
+        
+        window.editRule = function(index) {
+            const currentRule = state.rules[state.activeRuleTab][index];
+            const newRule = prompt('Kuralı düzenleyin:', currentRule);
+            
+            if (newRule !== null && newRule.trim() !== '') {
+                state.rules[state.activeRuleTab][index] = newRule.trim();
+                saveState();
+                render();
+            }
+        };
+
+        window.removeRule = function(index) {
+            if(!confirm('Bu kuralı silmek istediğinize emin misiniz?')) return;
+            state.rules[state.activeRuleTab].splice(index, 1);
+            saveState();
+            render();
+        };
+
+        window.addPredefinedTeam = function(sport, inputId) {
+            const val = document.getElementById(inputId).value.trim();
+            if(!val) return;
+            if(!state.predefinedTeams) state.predefinedTeams = { basketbol: [], voleybol: [], futbol: [], futsal: [] };
+            if(!state.predefinedTeams[sport]) state.predefinedTeams[sport] = [];
+            if(!state.predefinedTeams[sport].includes(val)) {
+                state.predefinedTeams[sport].push(val); saveState(); render();
+                setTimeout(() => { const el = document.getElementById(inputId); if(el) { el.value = ''; el.focus(); } }, 50);
+            } else alert("Bu takım zaten listede mevcut.");
+        };
+        window.removePredefinedTeam = function(sport, index) { state.predefinedTeams[sport].splice(index, 1); saveState(); render(); };
+
+        window.addTeam = function(inputId, groupSelectId, managerId, coachId) {
+            const name = document.getElementById(inputId).value.trim();
+            const group = document.getElementById(groupSelectId).value;
+            // DÜZELTME 1: Dashboard'dan 3 argüman geldiğinde undefined hatası fırlatmasını önlemek için güvenli seçim yapıldı.
+            const manager = (document.getElementById(managerId)?.value || '').trim();
+            const coach = (document.getElementById(coachId)?.value || '').trim();
+            
+            if (!name) return;
+            state.leagues[state.activeSport].teams.push({ id: Date.now(), name, group, manager, coach });
+            const inputEl = document.getElementById(inputId); if(inputEl) inputEl.value = '';
+            saveState(); render();
+        };
+        
+        window.removeTeam = function(id) {
+            if(!confirm('Bu takımı ve tüm verilerini silmek istediğinize emin misiniz?')) return;
+            // DÜZELTME 2: ID'lerin tür uyuşmazlığından dolayı silinmemesi hatası giderildi (String ile karşılaştırma yapıldı).
+            state.leagues[state.activeSport].teams = state.leagues[state.activeSport].teams.filter(t => String(t.id) !== String(id));
+            state.leagues[state.activeSport].fixtures.forEach(round => { round.matches = round.matches.filter(m => String(m.home.id) !== String(id) && String(m.away.id) !== String(id)); });
+            saveState(); render();
+        };
+
+        window.removeFixtureMatch = function(matchId) {
+            if(!confirm('Bu maçı fikstürden silmek istediğinize emin misiniz?')) return;
+            const league = state.leagues[state.activeSport];
+            league.fixtures.forEach(round => { round.matches = round.matches.filter(m => m.id !== matchId); });
+            league.fixtures = league.fixtures.filter(round => round.matches.length > 0);
+            saveState(); render();
+        };
+
+        window.addActiveMatch = function() {
+            const league = state.leagues[state.activeSport];
+            const rawDate = document.getElementById('activeDate').value;
+            const timeRaw = document.getElementById('activeTime').value;
+            const homeId = document.getElementById('activeHome').value;
+            const awayId = document.getElementById('activeAway').value;
+
+            if (!rawDate || !timeRaw || !homeId || !awayId) { alert("Lütfen tarih, saat, ev sahibi ve deplasman takımlarını eksiksiz doldurun!"); return; }
+            if (homeId === awayId) { alert("Ev sahibi ve deplasman takımı aynı takım olamaz!"); return; }
+
+            const time = parseFlexibleTime(timeRaw);
+            const dateStr = formatDateToLeagueString(new Date(rawDate));
+            let roundObj = league.fixtures.find(r => r.date === dateStr);
+            if (!roundObj) { roundObj = { round: league.fixtures.length + 1, date: dateStr, matches: [] }; league.fixtures.push(roundObj); }
+            roundObj.matches.push({ id: Date.now().toString(), home: {id: homeId}, away: {id: awayId}, homeScore: '', awayScore: '', time: time, group: getTeam(homeId, state.activeSport).group, cards: [] });
+            sortFixturesByDate(league.fixtures); state.showMatchForm = false; saveState(); render();
+        };
+
+        window.toggleCardForm = function(mId) { state.activeCardMatchId = (state.activeCardMatchId === mId) ? null : mId; render(); };
+        window.addCardToMatch = function(mId) {
+            const league = state.leagues[state.activeSport];
+            let matchRef = null;
+            league.fixtures.forEach(r => { const found = r.matches.find(m => m.id === mId); if(found) matchRef = found; });
+            const teamId = document.getElementById(`cardTeamSelect_${mId}`).value;
+            const playerName = document.getElementById(`cardPlayerInput_${mId}`).value.trim();
+            if(!playerName || !matchRef) { alert("Lütfen oyuncu adını girin!"); return; }
+            if(!matchRef.cards) matchRef.cards = [];
+            matchRef.cards.push({ id: Date.now(), teamId: teamId, playerName });
+            state.activeCardMatchId = null; saveState(); render();
+        };
+        window.removeCardFromMatch = function(matchId, cardId) {
+            const league = state.leagues[state.activeSport];
+            league.fixtures.forEach(r => { const m = r.matches.find(match => match.id === matchId); if(m && m.cards) m.cards = m.cards.filter(c => c.id !== cardId); });
+            saveState(); render();
+        };
+        window.updateScore = function(roundIndex, matchId, type, value) {
+            const league = state.leagues[state.activeSport];
+            const match = league.fixtures[roundIndex]?.matches.find(m => m.id === matchId);
+            if (match) { match[type] = value; saveState(); render(); }
+        };
+        window.updateKnockout = function(stage, index, field, value) {
+            state.leagues[state.activeSport].knockouts[stage][index][field] = value; saveState(); render();
+        };
+
+        window.exportPDF = function() {
+            const previousView = state.currentView;
+            if (state.currentView === 'settings') { state.currentView = 'dashboard'; render(); }
+            setTimeout(() => {
+                const element = document.getElementById('pdf-content');
+                if(!element) { if(previousView !== state.currentView) { state.currentView = previousView; render(); } return; }
+                const opt = {
+                    margin: [5, 5, 5, 5], filename: `Turnuva_Raporu.pdf`, image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save().then(() => { if(previousView !== state.currentView) { state.currentView = previousView; render(); } });
+            }, 150);
+        };
+
+        window.changeCredentials = function() {
+            const newUser = document.getElementById('newUsernameInput').value.trim();
+            const newPass = document.getElementById('newPasswordInput').value.trim();
+            if(!newUser || !newPass) { alert('Kullanıcı adı ve şifre boş bırakılamaz!'); return; }
+            if(!state.credentials) state.credentials = {};
+            state.credentials.username = newUser; state.credentials.password = newPass;
+            saveState(); alert('Giriş bilgileri başarıyla güncellendi!'); render();
+        };
+        window.startLeague = function() { state.leagues[state.activeSport].isStarted = true; saveState(); render(); };
+
+        // AD DEĞİŞİKLİĞİ YAPILAN FONKSİYONLAR (ÇAKIŞMAYI ÖNLER)
+        window.exportSystemData = function() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const node = document.createElement('a'); node.setAttribute("href", dataStr); node.setAttribute("download", "spor_ligi_2026.json");
+            document.body.appendChild(node); node.click(); node.remove();
+        };
+
+        window.importSystemData = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    if (json.leagues) { 
+                        state.leagues = json.leagues; state.predefinedTeams = json.predefinedTeams || state.predefinedTeams;
+                        state.credentials = json.credentials || state.credentials; state.rules = json.rules || state.rules;
+                        saveState(); render(); alert('Sistem Yedeği Yüklendi!'); 
+                    }
+                } catch (er) { alert('Hata: Lütfen geçerli bir yedek dosyası (.json) seçin!'); }
+            };
+            reader.readAsText(file);
+        };
+
+
+        // --- EKRAN HESAPLAMALARI VE RENDER FONKSİYONLARI ---
+        function calculateGroupStandings(targetGroup) {
+            const currentLeague = state.leagues[state.activeSport];
+            const stats = {};
+            const groupTeams = currentLeague.teams.filter(t => t.group === targetGroup);
+            
+            groupTeams.forEach(team => {
+                stats[team.id] = { id: team.id, name: team.name, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: 0, points: 0, group: team.group, redCards: 0, manager: team.manager, coach: team.coach };
+            });
+
+            currentLeague.fixtures.forEach(round => {
+                round.matches.forEach(match => {
+                    if(match.cards) { match.cards.forEach(card => { if(stats[card.teamId]) stats[card.teamId].redCards++; }); }
+
+                    if (match.homeScore !== '' && match.awayScore !== '') {
+                        const hScore = parseFloat(match.homeScore);
+                        const aScore = parseFloat(match.awayScore);
+                        if (stats[match.home.id] && stats[match.away.id]) {
+                            if(getTeam(match.home.id, state.activeSport).group === targetGroup || getTeam(match.away.id, state.activeSport).group === targetGroup) {
+                                stats[match.home.id].played++; stats[match.away.id].played++;
+                                stats[match.home.id].gf += hScore; stats[match.home.id].ga += aScore; stats[match.home.id].gd += (hScore - aScore);
+                                stats[match.away.id].gf += aScore; stats[match.away.id].ga += hScore; stats[match.away.id].gd += (aScore - hScore);
+                                
+                                if (state.activeSport.includes('basketbol')) {
+                                    if (hScore > aScore) { stats[match.home.id].won++; stats[match.home.id].points += 2; stats[match.away.id].lost++; stats[match.away.id].points += 1; }
+                                    else if (aScore > hScore) { stats[match.away.id].won++; stats[match.away.id].points += 2; stats[match.home.id].lost++; stats[match.home.id].points += 1; }
+                                    else { stats[match.home.id].drawn++; stats[match.home.id].points += 1; stats[match.away.id].drawn++; stats[match.away.id].points += 1; }
+                                } else if (state.activeSport.includes('voleybol')) { 
+                                    if (hScore > aScore) {
+                                        stats[match.home.id].won++; stats[match.away.id].lost++;
+                                        if (hScore === 3 && aScore < 2) { stats[match.home.id].points += 3; }
+                                        else if (hScore === 3 && aScore === 2) { stats[match.home.id].points += 2; stats[match.away.id].points += 1; }
+                                        else { stats[match.home.id].points += 3; }
+                                    } else if (aScore > hScore) {
+                                        stats[match.away.id].won++; stats[match.home.id].lost++;
+                                        if (aScore === 3 && hScore < 2) { stats[match.away.id].points += 3; }
+                                        else if (aScore === 3 && hScore === 2) { stats[match.away.id].points += 2; stats[match.home.id].points += 1; }
+                                        else { stats[match.away.id].points += 3; }
+                                    } else { stats[match.home.id].points += 1; stats[match.away.id].points += 1; }
+                                } else {
+                                    if (hScore > aScore) { stats[match.home.id].won++; stats[match.home.id].points += 3; stats[match.away.id].lost++; }
+                                    else if (aScore > hScore) { stats[match.away.id].won++; stats[match.away.id].points += 3; stats[match.home.id].lost++; }
+                                    else { stats[match.home.id].drawn++; stats[match.home.id].points += 1; stats[match.away.id].drawn++; stats[match.away.id].points += 1; }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+            return Object.values(stats).sort((a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf);
+        }
+
+        function getGroupTableHTML(groupId) {
+            const standings = calculateGroupStandings(groupId);
+            if (standings.length === 0) return `<div class="p-4 text-center text-xs text-gray-400 bg-white rounded-xl mb-6 border">${groupId} GRUBU Henüz Boş</div>`;
+
+            const isBask = state.activeSport.includes('basketbol');
+            const isVolley = state.activeSport.includes('voleybol');
+            const isFut = state.activeSport.includes('futbol') || state.activeSport.includes('futsal');
+
+            let headers = `
+                <th class="px-2 py-2 text-left w-8">#</th>
+                <th class="px-2 py-2 text-left">Takım</th>
+                <th class="px-1 py-2 text-center" title="Oynadığı Maç">O</th>
+                <th class="px-1 py-2 text-center" title="Galibiyet">G</th>
+                ${isFut ? '<th class="px-1 py-2 text-center" title="Beraberlik">B</th>' : ''}
+                <th class="px-1 py-2 text-center" title="Mağlubiyet">M</th>
+            `;
+            
+            if (isBask) {
+                headers += `<th class="px-1 py-2 text-center" title="Attığı Sayı">A</th><th class="px-1 py-2 text-center" title="Yediği Sayı">Y</th><th class="px-1 py-2 text-center" title="Averaj">AV</th>`;
+            } else if (isVolley) {
+                headers += `<th class="px-1 py-2 text-center" title="Sayı (Kazanılan Set)">S</th>`;
+            } else if (isFut) {
+                 headers += `<th class="px-1 py-2 text-center" title="Atılan Gol">A</th><th class="px-1 py-2 text-center" title="Yenilen Gol">Y</th><th class="px-1 py-2 text-center" title="Averaj">AV</th>`;               
+            }
+
+            headers += `
+                <th class="px-1 py-2 text-center font-bold text-blue-600" title="Puan">P</th>
+                <th class="px-1 py-2 text-center text-red-600 font-bold" title="Kırmızı Kart">KK</th>
+                ${state.isLoggedIn ? '<th class="px-1 py-2 text-center w-6"></th>' : ''}
+            `;
+
+            let rowsHtml = standings.map((team, index) => {
+                let extraCells = '';
+                let drawCell = isFut ? `<td class="px-1 py-3 text-center text-gray-600 font-medium">${team.drawn}</td>` : '';
+
+                if (isBask || isFut) {
+                    extraCells = `<td class="px-1 py-3 text-center text-gray-600">${team.gf}</td><td class="px-1 py-3 text-center text-gray-600">${team.ga}</td><td class="px-1 py-3 text-center font-medium ${team.gd > 0 ? 'text-green-600' : (team.gd < 0 ? 'text-red-600' : 'text-gray-600')}">${team.gd > 0 ? '+' + team.gd : team.gd}</td>`;
+                } else if (isVolley) {
+                    extraCells = `<td class="px-1 py-3 text-center text-gray-600">${team.gf}</td>`;
+                }
+
+                let deleteBtn = state.isLoggedIn ? `<td class="px-1 py-3 text-center"><button onclick="window.removeTeam(${team.id})" class="text-gray-300 hover:text-red-500 transition">${icons.trash}</button></td>` : '';
+                let topTurBadge = index < 2 ? `<span class="ml-1 text-[8px] bg-green-100 text-green-700 px-1 rounded uppercase tracking-tighter">Üst Tur</span>` : '';
+
+                return `
+                <tr class="${index < 2 ? 'bg-green-50/60 border-l-4 border-green-500 font-bold' : 'hover:bg-gray-50'} group transition-colors">
+                    <td class="px-2 py-3 ${index < 2 ? 'text-green-700' : 'text-gray-400'}">${index + 1}</td>
+                    <td class="px-2 py-3 text-gray-800 relative cursor-help" title="Yönetici: ${team.manager || '-'} | Antrenör: ${team.coach || '-'}">${team.name} ${topTurBadge}</td>
+                    <td class="px-1 py-3 text-center text-gray-600">${team.played}</td>
+                    <td class="px-1 py-3 text-center text-green-600 font-medium">${team.won}</td>
+                    ${drawCell}
+                    <td class="px-1 py-3 text-center text-red-600 font-medium">${team.lost}</td>
+                    ${extraCells}
+                    <td class="px-1 py-3 text-center font-bold text-blue-600">${team.points}</td>
+                    <td class="px-1 py-3 text-center font-bold text-red-600">${team.redCards}</td>
+                    ${deleteBtn}
+                </tr>
+                `;
+            }).join('');
+
+            return `
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+                    <div class="p-3 bg-gray-800 text-white flex justify-between items-center"><h2 class="font-bold text-sm text-white">${groupId} GRUBU</h2></div>
+                    <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-gray-50 text-gray-500 uppercase"><tr>${headers}</tr></thead><tbody class="divide-y divide-gray-100">${rowsHtml}</tbody></table></div>
+                </div>
+            `;
+        }
+
+        // --- GÖRÜNÜM (RENDER) FONKSİYONLARI ---
+        function renderHome() {
+            const tabs = [
+                { id: 'futbol', name: 'Futbol', icon: icons.soccer },
+                { id: 'futsal', name: 'Futsal', icon: icons.soccer },
+                { id: 'basketbol', name: 'Basketbol', icon: icons.dribbble },
+                { id: 'voleybol', name: 'Voleybol', icon: icons.users }
+            ];
+            
+            let tabButtonsHtml = tabs.map(tab => `
+                <button onclick="window.setActiveRuleTab('${tab.id}')" 
+                        class="flex items-center gap-2 px-5 py-3 rounded-t-xl font-bold transition whitespace-nowrap border-b-2 ${state.activeRuleTab === tab.id ? 'border-blue-600 text-blue-600 bg-blue-50/50' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'}">
+                    <span class="opacity-80">${tab.icon}</span> ${tab.name}
+                </button>
+            `).join('');
+
+            const currentRules = (state.rules && state.rules[state.activeRuleTab]) ? state.rules[state.activeRuleTab] : [];
+            
+            let rulesHtml = currentRules.map((rule, index) => `
+                <li class="flex justify-between items-start bg-white p-3 md:p-4 rounded-xl border border-gray-200 shadow-sm mb-3 text-sm md:text-base text-gray-700 leading-relaxed transition hover:border-blue-200">
+                    <span class="flex-1 mr-4 font-medium"><span class="text-blue-500 font-bold mr-2">•</span> ${rule}</span>
+                    ${state.isLoggedIn ? `
+                    <div class="flex gap-1 mt-0.5">
+                        <button onclick="window.editRule(${index})" class="text-blue-400 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition" title="Düzenle">${icons.edit}</button>
+                        <button onclick="window.removeRule(${index})" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Sil">${icons.trash}</button>
+                    </div>
+                    ` : ''}
+                </li>
+            `).join('');
+
+            if(currentRules.length === 0) {
+                rulesHtml = `<div class="text-center text-gray-400 text-sm py-8 italic bg-gray-50 rounded-xl border border-gray-100">Bu branş için henüz kural eklenmemiş.</div>`;
+            }
+
+            const activeTabName = tabs.find(t => t.id === state.activeRuleTab)?.name || 'Futbol';
+
+            return `
+                <div class="max-w-5xl mx-auto fade-in mt-4" id="pdf-content">
+                    <div class="bg-white p-4 md:p-8 rounded-2xl shadow-xl border border-gray-100">
+                        <div class="flex flex-col items-center mb-6 border-b border-gray-100 pb-6">
+                            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
+                                ${icons.trophy}
+                            </div>
+                            <h2 class="text-xl md:text-3xl font-extrabold text-center text-gray-800 uppercase tracking-wide leading-tight">
+                                31. REKTÖRLÜK KUPASI<br><span class="text-blue-600">MÜSABAKA KURALLARI</span>
+                            </h2>
+                        </div>
+                        
+                        <!-- SEKMELER (TABS) -->
+                        <div class="flex overflow-x-auto custom-scrollbar border-b border-gray-200 mb-6 print:hidden">
+                            ${tabButtonsHtml}
+                        </div>
+
+                        <!-- PDF Çıktısı İçin Başlık -->
+                        <h3 class="hidden print:block text-center font-bold text-xl mb-4 text-blue-800 border-b pb-2 uppercase">${activeTabName} MÜSABAKA KURALLARI</h3>
+                        
+                        ${state.isLoggedIn ? `
+                        <div class="bg-blue-50/50 p-4 md:p-5 rounded-xl border border-blue-100 mb-6 print:hidden">
+                            <h3 class="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">${icons.plus} ${activeTabName} Kurallarına Yeni Madde Ekle</h3>
+                            <div class="flex flex-col sm:flex-row gap-3 items-center">
+                                <input type="text" id="newRuleInput" onkeypress="if(event.key === 'Enter') window.addRule()" class="flex-1 w-full border border-blue-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm" placeholder="Buraya kural maddesini yazın...">
+                                <button onclick="window.addRule()" class="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-bold shadow-md hover:bg-blue-700 transition whitespace-nowrap">Ekle</button>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <ul class="space-y-1">
+                            ${rulesHtml}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderKnockout() {
+            const league = state.leagues[state.activeSport];
+            const kn = league.knockouts || DEFAULT_KNOCKOUT;
+            const teams = league.teams;
+
+            const renderMatchBox = (match, stage, index) => {
+                const hName = getTeam(match.h, state.activeSport).name;
+                const aName = getTeam(match.a, state.activeSport).name;
+
+                if (state.isLoggedIn) {
+                    return `
+                        <div class="bg-white border-2 border-gray-200 rounded-lg p-2 shadow-sm text-xs">
+                            <div class="flex gap-2 items-center mb-1">
+                                <select class="w-full border rounded p-1 outline-none bg-gray-50" onchange="window.updateKnockout('${stage}', ${index}, 'h', this.value)">
+                                    <option value="">Ev Sahibi Seç</option>
+                                    ${teams.map(t => `<option value="${t.id}" ${match.h == t.id ? 'selected' : ''}>[${t.group}] ${t.name}</option>`).join('')}
+                                </select>
+                                <input type="number" value="${match.hs}" class="w-10 text-center border rounded p-1 font-bold" onchange="window.updateKnockout('${stage}', ${index}, 'hs', this.value)">
+                            </div>
+                            <div class="flex gap-2 items-center">
+                                <select class="w-full border rounded p-1 outline-none bg-gray-50" onchange="window.updateKnockout('${stage}', ${index}, 'a', this.value)">
+                                    <option value="">Deplasman Seç</option>
+                                    ${teams.map(t => `<option value="${t.id}" ${match.a == t.id ? 'selected' : ''}>[${t.group}] ${t.name}</option>`).join('')}
+                                </select>
+                                <input type="number" value="${match.as}" class="w-10 text-center border rounded p-1 font-bold" onchange="window.updateKnockout('${stage}', ${index}, 'as', this.value)">
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="bg-white border-2 ${match.hs !== '' && match.hs > match.as ? 'border-green-300' : 'border-gray-200'} rounded-lg overflow-hidden shadow-sm text-sm">
+                            <div class="flex justify-between items-center p-2 border-b bg-gray-50">
+                                <span class="font-medium text-gray-700 truncate">${match.h ? hName : '-'}</span>
+                                <span class="font-bold text-gray-900 bg-white border px-2 py-0.5 rounded">${match.hs !== '' ? match.hs : '-'}</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2">
+                                <span class="font-medium text-gray-700 truncate">${match.a ? aName : '-'}</span>
+                                <span class="font-bold text-gray-900 bg-white border px-2 py-0.5 rounded">${match.as !== '' ? match.as : '-'}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            };
+
+            return `
+                <div class="bg-gray-100 p-6 rounded-xl border border-gray-200" id="pdf-content">
+                    <h2 class="text-xl font-bold text-center mb-8 uppercase tracking-widest text-gray-800">Eleme Turları (Şampiyonluk Ağacı)</h2>
+                    <div class="flex flex-col md:flex-row justify-between gap-8 md:gap-4 relative">
+                        <!-- Çeyrek Final -->
+                        <div class="w-full md:w-1/3 flex flex-col justify-around gap-4 z-10">
+                            <div class="text-center font-bold text-gray-500 mb-2 text-xs uppercase bg-gray-200 rounded py-1">Çeyrek Final</div>
+                            ${kn.qf.map((m, i) => renderMatchBox(m, 'qf', i)).join('<div class="h-2 md:h-8"></div>')}
+                        </div>
+                        <!-- Yarı Final -->
+                        <div class="w-full md:w-1/3 flex flex-col justify-around gap-12 z-10">
+                            <div class="text-center font-bold text-gray-500 mb-2 text-xs uppercase bg-gray-200 rounded py-1 mt-6 md:mt-0">Yarı Final</div>
+                            ${kn.sf.map((m, i) => renderMatchBox(m, 'sf', i)).join('<div class="h-12 md:h-24"></div>')}
+                        </div>
+                        <!-- Final -->
+                        <div class="w-full md:w-1/3 flex flex-col justify-center gap-4 z-10">
+                            <div class="text-center font-bold text-yellow-600 mb-2 text-xs uppercase bg-yellow-100 rounded py-1 mt-6 md:mt-0">FİNAL</div>
+                            ${renderMatchBox(kn.f[0], 'f', 0)}
+                            <div class="mt-8 text-center">${icons.trophy}</div>
+                        </div>
+                    </div>
+                    ${state.isLoggedIn ? `<p class="text-center text-xs text-gray-400 mt-8 italic">Gruplardaki ilk 2 takımı manuel olarak boşluklara atayabilirsiniz.</p>` : ''}
+                </div>
+            `;
+        }
+
+        function renderDashboard() {
+            const currentSport = SPORTS[state.activeSport.toUpperCase()];
+            const activeLeague = state.leagues[state.activeSport];
+            
+            let listType = 'basketbol';
+            if(state.activeSport.includes('voleybol')) listType = 'voleybol';
+            if(state.activeSport.includes('futbol')) listType = 'futbol';
+            if(state.activeSport.includes('futsal')) listType = 'futsal';
+
+            const datalistOptions = (state.predefinedTeams && state.predefinedTeams[listType]) ? state.predefinedTeams[listType] : [];
+            const datalistHtml = `<datalist id="teamDatalist">${datalistOptions.map(t => `<option value="${t}"></option>`).join('')}</datalist>`;
+            
+            return `
+                <div class="bg-white p-2">
+                    ${datalistHtml}
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 space-y-6">
+                            ${state.isLoggedIn ? `
+                            <div class="bg-white rounded-xl shadow-sm border border-blue-100 p-4 flex flex-wrap gap-2 items-center fade-in print:hidden">
+                                <select id="activeGroupSelectDashboard" class="border rounded px-2 py-1.5 text-xs font-bold bg-gray-50"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
+                                <input type="text" list="teamDatalist" id="activeTeamInputDashboard" placeholder="Hızlı Takım Seç/Yaz..." class="flex-1 border rounded px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-blue-500">
+                                <input type="text" id="activeManagerInputDashboard" placeholder="Yönetici" class="hidden sm:block border rounded px-3 py-1.5 text-xs outline-none w-24">
+                                <button onclick="window.addTeam('activeTeamInputDashboard', 'activeGroupSelectDashboard', 'activeManagerInputDashboard')" class="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold hover:bg-blue-700 transition">Ekle</button>
+                            </div>
+                            ` : ''}
+
+                            <div id="pdf-content" class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-2">
+                                ${['A','B','C','D'].map(g => getGroupTableHTML(g)).join('')}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-1">
+                            <div class="bg-white rounded-xl shadow-sm border h-[calc(100vh-140px)] flex flex-col sticky top-24 print:h-auto">
+                                <div class="p-4 border-b bg-gray-50 flex justify-between items-center print:bg-white">
+                                    <h2 class="font-bold text-sm text-gray-800 tracking-tight">Fikstür & Sonuçlar</h2>
+                                    ${state.isLoggedIn ? `<button onclick="window.toggleMatchForm()" class="bg-green-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider print:hidden">${state.showMatchForm ? 'Kapat' : '+ Yeni Maç'}</button>` : ''}
+                                </div>
+
+                                ${state.showMatchForm && state.isLoggedIn ? `
+                                    <div class="bg-green-50 p-4 border-b fade-in print:hidden">
+                                        <div class="grid grid-cols-2 gap-2 mb-2">
+                                            <input type="date" id="activeDate" class="border rounded p-1.5 text-xs bg-white outline-none">
+                                            <input type="time" id="activeTime" value="14:00" class="border rounded p-1.5 text-xs bg-white">
+                                        </div>
+                                        <div class="space-y-2 mb-2">
+                                            <select id="activeHome" class="w-full border rounded p-1.5 text-xs bg-white">${activeLeague.teams.map(t => `<option value="${t.id}">[${t.group}] ${t.name}</option>`).join('')}</select>
+                                            <select id="activeAway" class="w-full border rounded p-1.5 text-xs bg-white">${activeLeague.teams.map(t => `<option value="${t.id}">[${t.group}] ${t.name}</option>`).join('')}</select>
+                                        </div>
+                                        <button onclick="window.addActiveMatch()" class="w-full bg-green-600 text-white py-2 rounded text-xs font-bold shadow hover:bg-green-700 transition">Fikstüre Kaydet</button>
+                                    </div>
+                                ` : ''}
+
+                                <div class="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar print:overflow-visible">
+                                    ${activeLeague.fixtures.map((round, rIndex) => `
+                                        <div class="bg-white rounded-lg border overflow-hidden shadow-sm">
+                                            <div class="bg-gray-100 px-3 py-1.5 text-[10px] font-bold text-center uppercase text-gray-500 border-b print:bg-gray-200">${round.date}</div>
+                                            <div class="divide-y divide-gray-100">
+                                                ${round.matches.map(match => {
+                                                    const h = getTeam(match.home.id, state.activeSport);
+                                                    const a = getTeam(match.away.id, state.activeSport);
+                                                    const cardFormOpen = state.activeCardMatchId === match.id;
+                                                    return `
+                                                    <div class="p-3 hover:bg-gray-50 transition relative group/match">
+                                                        ${state.isLoggedIn ? `<button onclick="window.removeFixtureMatch('${match.id}')" class="absolute top-1 right-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all p-1.5 rounded-md shadow-sm border border-red-100 print:hidden" title="Maçı Fikstürden Sil">${icons.trash}</button>` : ''}
+                                                        
+                                                        <div class="flex justify-between items-center mb-1">
+                                                            <span class="text-[9px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500 font-bold uppercase tracking-tight">${match.group} GRUBU</span>
+                                                            <span class="text-[10px] text-gray-400 flex items-center gap-1 font-medium">${icons.clock} ${match.time || '--:--'}</span>
+                                                        </div>
+                                                        <div class="flex justify-between items-center gap-1 ${state.isLoggedIn ? 'pr-6' : ''}">
+                                                            <span class="text-xs font-semibold w-[40%] text-right truncate" title="Yönetici: ${h.manager || '-'} | Antrenör: ${h.coach || '-'}">${h.name}</span>
+                                                            <div class="flex items-center gap-1">
+                                                                <!-- DÜZELTME 3: oninput yerine onchange kullanıldı. Böylece skor yazarken imlecin kaybolması engellendi. -->
+                                                                <input type="number" ${!state.isLoggedIn ? 'readonly' : ''} value="${match.homeScore}" onchange="window.updateScore(${rIndex}, '${match.id}', 'homeScore', this.value)" class="w-8 h-7 text-center border rounded text-xs font-bold outline-none focus:ring-1 focus:ring-blue-400 shadow-sm ${!state.isLoggedIn ? 'bg-gray-50 border-transparent cursor-default' : 'bg-white'}">
+                                                                <span class="text-gray-300 font-bold">:</span>
+                                                                <input type="number" ${!state.isLoggedIn ? 'readonly' : ''} value="${match.awayScore}" onchange="window.updateScore(${rIndex}, '${match.id}', 'awayScore', this.value)" class="w-8 h-7 text-center border rounded text-xs font-bold outline-none focus:ring-1 focus:ring-blue-400 shadow-sm ${!state.isLoggedIn ? 'bg-gray-50 border-transparent cursor-default' : 'bg-white'}">
+                                                            </div>
+                                                            <span class="text-xs font-semibold w-[40%] text-left truncate" title="Yönetici: ${a.manager || '-'} | Antrenör: ${a.coach || '-'}">${a.name}</span>
+                                                        </div>
+                                                        
+                                                        ${(match.cards && match.cards.length > 0) ? `
+                                                            <div class="mt-2 space-y-1">
+                                                                ${match.cards.map(card => `
+                                                                    <div class="flex items-center justify-between bg-red-50 px-2 py-1 rounded border border-red-100 text-[9px] text-red-700 font-medium">
+                                                                        <div class="flex items-center"><span class="red-card-visual print:border print:border-red-500"></span> <b>${card.playerName}</b> (${getTeam(card.teamId, state.activeSport).name})</div>
+                                                                        ${state.isLoggedIn ? `<button onclick="window.removeCardFromMatch('${match.id}', ${card.id})" class="text-red-300 hover:text-red-600 font-bold print:hidden">✕</button>` : ''}
+                                                                    </div>
+                                                                `).join('')}
+                                                            </div>
+                                                        ` : ''}
+
+                                                        ${state.isLoggedIn ? `
+                                                        <div class="mt-2 text-center print:hidden">
+                                                            <button onclick="window.toggleCardForm('${match.id}')" class="text-[9px] text-red-500 font-bold hover:underline transition">
+                                                                ${cardFormOpen ? 'Vazgeç' : '+ Kırmızı Kart Ekle'}
+                                                            </button>
+                                                        </div>
+                                                        ` : ''}
+
+                                                        ${cardFormOpen && state.isLoggedIn ? `
+                                                            <div class="mt-2 p-2 bg-red-50 rounded border border-red-100 fade-in print:hidden">
+                                                                <select id="cardTeamSelect_${match.id}" class="w-full text-[10px] p-1 border rounded mb-1 bg-white outline-none">
+                                                                    <option value="${match.home.id}">${h.name}</option>
+                                                                    <option value="${match.away.id}">${a.name}</option>
+                                                                </select>
+                                                                <input type="text" id="cardPlayerInput_${match.id}" placeholder="Kart Alan Oyuncu Adı..." class="w-full text-[10px] p-1 border rounded mb-1 outline-none">
+                                                                <button onclick="window.addCardToMatch('${match.id}')" class="w-full bg-red-600 text-white py-1 rounded text-[10px] font-bold hover:bg-red-700 transition">Kaydet</button>
+                                                            </div>
+                                                        ` : ''}
+                                                    </div>
+                                                `}).join('')}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSettings() {
+            if(!state.isLoggedIn) {
+                return `
+                    <div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl border border-gray-100 fade-in mt-12">
+                        <div class="flex flex-col items-center mb-6">
+                            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                                ${icons.trophy}
+                            </div>
+                            <h2 class="text-2xl font-bold text-gray-800">Yönetici Girişi</h2>
+                            <p class="text-sm text-gray-500">Sadece yetkili kullanıcılar erişebilir</p>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Kullanıcı Adı</label>
+                                <input type="text" id="loginUser" class="w-full border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-400" placeholder="admin">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Şifre</label>
+                                <input type="password" id="loginPass" class="w-full border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-400" placeholder="1234">
+                            </div>
+                            <button onclick="window.login()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold shadow-md hover:bg-blue-700 transition">Giriş Yap</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="max-w-5xl mx-auto space-y-6 fade-in mt-4">
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                        <div class="flex justify-between items-center mb-6 border-b pb-4">
+                            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">${icons.settings} Yönetim Paneli</h2>
+                            <button onclick="window.logout()" class="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg font-bold hover:bg-red-100 transition">Oturumu Kapat</button>
+                        </div>
+                        
+                        <!-- ÖN TANIMLI TAKIMLAR YÖNETİMİ -->
+                        <div class="mt-4">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Ön Tanımlı Takım Listeleri</h3>
+                            <p class="text-xs text-gray-500 mb-4">Aşağıda oluşturduğunuz listeler, takım ekleme ekranlarında seçilebilir seçenekler olarak görünecektir.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <!-- Futbol Listesi -->
+                                <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                                    <h4 class="font-bold text-green-800 mb-3 flex items-center gap-2">${icons.soccer} Futbol</h4>
+                                    <div class="flex gap-2 mb-4">
+                                        <input type="text" id="newPreFutbol" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('futbol', 'newPreFutbol')" class="flex-1 border border-green-200 rounded p-2 text-xs outline-none focus:ring-2 focus:ring-green-400" placeholder="Yeni Takım...">
+                                        <button onclick="window.addPredefinedTeam('futbol', 'newPreFutbol')" class="bg-green-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-green-700 transition">Ekle</button>
+                                    </div>
+                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        ${(state.predefinedTeams?.futbol || []).map((t, i) => `
+                                            <li class="flex justify-between items-center bg-white p-2 rounded border border-green-100 text-xs shadow-sm">
+                                                <span class="font-medium text-gray-700">${t}</span>
+                                                <button onclick="window.removePredefinedTeam('futbol', ${i})" class="text-red-400 hover:text-red-600 transition" title="Sil">${icons.trash}</button>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+
+                                <!-- Futsal Listesi -->
+                                <div class="bg-teal-50 p-4 rounded-lg border border-teal-100">
+                                    <h4 class="font-bold text-teal-800 mb-3 flex items-center gap-2">${icons.soccer} Futsal</h4>
+                                    <div class="flex gap-2 mb-4">
+                                        <input type="text" id="newPreFutsal" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('futsal', 'newPreFutsal')" class="flex-1 border border-teal-200 rounded p-2 text-xs outline-none focus:ring-2 focus:ring-teal-400" placeholder="Yeni Takım...">
+                                        <button onclick="window.addPredefinedTeam('futsal', 'newPreFutsal')" class="bg-teal-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-teal-700 transition">Ekle</button>
+                                    </div>
+                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        ${(state.predefinedTeams?.futsal || []).map((t, i) => `
+                                            <li class="flex justify-between items-center bg-white p-2 rounded border border-teal-100 text-xs shadow-sm">
+                                                <span class="font-medium text-gray-700">${t}</span>
+                                                <button onclick="window.removePredefinedTeam('futsal', ${i})" class="text-red-400 hover:text-red-600 transition" title="Sil">${icons.trash}</button>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+
+                                <!-- Basketbol Listesi -->
+                                <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                                    <h4 class="font-bold text-orange-800 mb-3 flex items-center gap-2">${icons.dribbble} Basketbol</h4>
+                                    <div class="flex gap-2 mb-4">
+                                        <input type="text" id="newPreBask" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('basketbol', 'newPreBask')" class="flex-1 border border-orange-200 rounded p-2 text-xs outline-none focus:ring-2 focus:ring-orange-400" placeholder="Yeni Takım...">
+                                        <button onclick="window.addPredefinedTeam('basketbol', 'newPreBask')" class="bg-orange-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-orange-700 transition">Ekle</button>
+                                    </div>
+                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        ${(state.predefinedTeams?.basketbol || []).map((t, i) => `
+                                            <li class="flex justify-between items-center bg-white p-2 rounded border border-orange-100 text-xs shadow-sm">
+                                                <span class="font-medium text-gray-700">${t}</span>
+                                                <button onclick="window.removePredefinedTeam('basketbol', ${i})" class="text-red-400 hover:text-red-600 transition" title="Sil">${icons.trash}</button>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+
+                                <!-- Voleybol Listesi -->
+                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                    <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">${icons.users} Voleybol</h4>
+                                    <div class="flex gap-2 mb-4">
+                                        <input type="text" id="newPreVol" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('voleybol', 'newPreVol')" class="flex-1 border border-blue-200 rounded p-2 text-xs outline-none focus:ring-2 focus:ring-blue-400" placeholder="Yeni Takım...">
+                                        <button onclick="window.addPredefinedTeam('voleybol', 'newPreVol')" class="bg-blue-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-blue-700 transition">Ekle</button>
+                                    </div>
+                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        ${(state.predefinedTeams?.voleybol || []).map((t, i) => `
+                                            <li class="flex justify-between items-center bg-white p-2 rounded border border-blue-100 text-xs shadow-sm">
+                                                <span class="font-medium text-gray-700">${t}</span>
+                                                <button onclick="window.removePredefinedTeam('voleybol', ${i})" class="text-red-400 hover:text-red-600 transition" title="Sil">${icons.trash}</button>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GİRİŞ BİLGİLERİNİ GÜNCELLEME -->
+                        <div class="mt-6 border-t border-gray-100 pt-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Giriş Bilgilerini Güncelle</h3>
+                            <p class="text-xs text-gray-500 mb-4">Yönetici paneline erişmek için kullandığınız kullanıcı adı ve şifreyi buradan değiştirebilirsiniz.</p>
+                            
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Kullanıcı Adı</label>
+                                    <input type="text" id="newUsernameInput" class="w-full border border-gray-300 rounded p-2 text-sm outline-none focus:ring-2 focus:ring-gray-400 bg-white" value="${state.credentials?.username || 'admin'}">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Şifre</label>
+                                    <input type="text" id="newPasswordInput" class="w-full border border-gray-300 rounded p-2 text-sm outline-none focus:ring-2 focus:ring-gray-400 bg-white" value="${state.credentials?.password || '1234'}">
+                                </div>
+                                <div class="md:col-span-2 flex justify-end mt-2">
+                                    <button onclick="window.changeCredentials()" class="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded text-sm font-bold shadow-sm transition">Bilgileri Kaydet</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VERİ VE ÇIKTI İŞLEMLERİ -->
+                        <div class="mt-6 border-t border-gray-100 pt-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Veri ve Çıktı İşlemleri</h3>
+                            <p class="text-xs text-gray-500 mb-4">Puan durumunu veya kuralları PDF olarak alabilir, tüm sistemi bilgisayarınıza yedekleyip yükleyebilirsiniz.</p>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <button onclick="window.exportPDF()" class="flex items-center justify-center gap-2 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 px-4 py-3 rounded-lg text-sm font-bold transition shadow-sm">
+                                    ${icons.pdf} Şu Anki Sayfayı PDF İndir
+                                </button>
+                                <button onclick="window.exportSystemData()" class="flex items-center justify-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 px-4 py-3 rounded-lg text-sm font-bold transition shadow-sm">
+                                    ${icons.download} Sistemi Yedekle (.json)
+                                </button>
+                                <div>
+                                    <input type="file" id="upInput" class="hidden" onchange="window.importSystemData(event)" accept=".json">
+                                    <button onclick="document.getElementById('upInput').click()" class="w-full h-full flex items-center justify-center gap-2 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 px-4 py-3 rounded-lg text-sm font-bold transition shadow-sm">
+                                        ${icons.upload} Yedek Yükle
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- SOL PANEL (DRAWER) ---
+        function renderSidePanel() {
+            if (!state.isPanelOpen) return '';
+            const currentSport = SPORTS[state.activeSport.toUpperCase()];
+            
+            return `
+                <!-- Backdrop -->
+                <div class="fixed inset-0 bg-black/50 z-50 print:hidden transition-opacity" onclick="window.togglePanel()"></div>
+                
+                <!-- Side Panel -->
+                <div class="fixed top-0 left-0 w-72 h-full bg-white shadow-2xl z-50 flex flex-col print:hidden fade-in" style="animation: slideIn 0.3s ease-out;">
+                    <style>@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }</style>
+                    <div class="${currentSport.color} p-5 flex justify-between items-center text-white transition-colors duration-500">
+                        <h2 class="font-bold text-lg flex items-center gap-2">${icons.menu} Menü</h2>
+                        <button onclick="window.togglePanel()" class="p-1.5 hover:bg-white/20 rounded-md transition">${icons.x}</button>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
+                        
+                        <!-- Genel (Ana Sayfa) -->
+                        <div>
+                            <button onclick="window.handleNav('home')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition text-left ${state.currentView === 'home' ? currentSport.color + ' text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}">
+                                <div class="opacity-80">${icons.home}</div>
+                                Ana Sayfa (Kurallar)
+                            </button>
+                        </div>
+
+                        <hr class="border-gray-100 -my-2">
+
+                        <!-- Branşlar -->
+                        <div>
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-2">Spor Branşları</h3>
+                            <div class="flex flex-col gap-1">
+                                ${Object.values(SPORTS).map(sport => `
+                                    <button onclick="window.handleNav('dashboard', '${sport.id}')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition text-left ${state.activeSport === sport.id && state.currentView === 'dashboard' ? currentSport.color + ' text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}">
+                                        <div class="opacity-80">${sport.icon}</div>
+                                        ${sport.name}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <hr class="border-gray-100">
+
+                        <!-- Turnuva Yönetimi -->
+                        <div>
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-2">Turnuva</h3>
+                            <button onclick="window.handleNav('knockout')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition text-left ${state.currentView === 'knockout' ? currentSport.color + ' text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}">
+                                <div class="opacity-80">${icons.bracket}</div>
+                                Eleme Aşaması (Final)
+                            </button>
+                        </div>
+
+                        <hr class="border-gray-100">
+
+                        <!-- Ayarlar -->
+                        <div>
+                            <button onclick="window.handleNav('settings')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition text-left ${state.currentView === 'settings' ? currentSport.color + ' text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}">
+                                <div class="opacity-80">${icons.settings}</div>
+                                Sistem Ayarları
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            const currentSport = SPORTS[state.activeSport.toUpperCase()];
+
+            // Eksik veri yapılarını koruma
+            if(!state.leagues.futbol_erkek) state.leagues.futbol_erkek = { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false };
+            if(!state.leagues.futsal_erkek) state.leagues.futsal_erkek = { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false };
+
+            if(!state.leagues[state.activeSport].knockouts) {
+                Object.keys(state.leagues).forEach(k => {
+                    if(!state.leagues[k].knockouts) state.leagues[k].knockouts = JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT));
+                });
+            }
+            if(!state.predefinedTeams) state.predefinedTeams = { basketbol: [], voleybol: [], futbol: [], futsal: [] };
+            if(!state.predefinedTeams.futbol) state.predefinedTeams.futbol = [];
+            if(!state.predefinedTeams.futsal) state.predefinedTeams.futsal = [];
+            if(!state.rules) state.rules = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
+
+            let html = `
+                ${renderSidePanel()}
+                <!-- TEPE BARI -->
+                <div class="${currentSport.color} text-white p-4 shadow-lg sticky top-0 z-40 transition-colors duration-500 print:hidden relative">
+                    <div class="max-w-7xl mx-auto flex justify-between items-center h-12 relative">
+                        <!-- Menü Butonu (Sol) -->
+                        <button onclick="window.togglePanel()" class="p-2 hover:bg-white/20 rounded-md transition z-50">
+                            ${icons.menu}
+                        </button>
+                        
+                        <!-- Başlık (Tam Orta) -->
+                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-3 w-full justify-center pointer-events-none">
+                            <div class="w-6 h-6 md:w-8 md:h-8">${icons.trophy}</div>
+                            <h1 class="text-lg md:text-2xl font-bold whitespace-nowrap">31. SK Rektörlük Kupası</h1>
+                        </div>
+
+                        <!-- KAYDETME DURUM GÖSTERGESİ (Sağ) -->
+                        <div id="save-status" class="z-50 text-[10px] md:text-xs font-medium text-right min-w-[100px] opacity-90"></div>
+                    </div>
+                </div>
+                <div class="max-w-7xl mx-auto p-4 md:p-6 pb-20">
+            `;
+
+            if (state.currentView === 'home') {
+                html += renderHome();
+            } else if (state.currentView === 'settings') {
+                html += renderSettings();
+            } else if (state.currentView === 'knockout') {
+                html += renderKnockout();
+            } else {
+                const activeLeague = state.leagues[state.activeSport];
+                if (!activeLeague.isStarted && activeLeague.fixtures.length === 0) {
+                    if (state.isLoggedIn) {
+                        html += `
+                            <div class="bg-white rounded-xl shadow-md p-6 max-w-2xl mx-auto border fade-in mt-4">
+                                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">${icons.users} Takım Kayıt (${currentSport.name})</h2>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                    <input type="text" id="teamInput" list="teamDatalist" placeholder="Takım Adı Seç/Yaz" class="border rounded p-2 text-sm outline-none focus:ring-2 focus:ring-blue-400">
+                                    <select id="groupSelect" class="border rounded p-2 text-sm bg-white">
+                                        <option value="A">A Grubu</option><option value="B">B Grubu</option>
+                                        <option value="C">C Grubu</option><option value="D">D Grubu</option>
+                                    </select>
+                                    <input type="text" id="managerInput" placeholder="Yönetici" class="border rounded p-2 text-sm outline-none">
+                                    <input type="text" id="coachInput" placeholder="Antrenör" class="border rounded p-2 text-sm outline-none">
+                                </div>
+                                <button onclick="window.addTeam('teamInput', 'groupSelect', 'managerInput', 'coachInput')" class="w-full bg-blue-600 text-white py-2 rounded font-bold mb-6 hover:bg-blue-700 transition">+ Takım Ekle</button>
+                                <div class="space-y-2 mb-6 max-h-60 overflow-y-auto custom-scrollbar">
+                                    ${activeLeague.teams.map(t => `<div class="flex justify-between p-2 bg-gray-50 border rounded text-xs"><span>[${t.group}] <b>${t.name}</b></span><button onclick="window.removeTeam(${t.id})" class="text-red-500">${icons.trash}</button></div>`).join('')}
+                                </div>
+                                <button onclick="window.startLeague()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold shadow-md hover:bg-green-700 transition">Ligi Başlat</button>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="bg-white rounded-xl shadow-md p-12 max-w-2xl mx-auto border text-center fade-in mt-8">
+                                <div class="w-20 h-20 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-6">${icons.trophy}</div>
+                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Lig Henüz Başlamadı</h2>
+                                <p class="text-gray-500 italic">Takımlar ve fikstür kesinleştiğinde veriler burada yayınlanacaktır.</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    html += renderDashboard();
+                }
+            }
+
+            html += `</div>`;
+            app.innerHTML = html;
+            
+            // Ekran yenilendiğinde kaydetme durumunu tekrar bas
+            if(window.renderSaveStatus) window.renderSaveStatus();
+        }
+
+        render();
+        initFirebase();
+
+    </script>
+</body>
+</html>
