@@ -12,19 +12,39 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- YENİ: Modern Google Fontlar -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+
     <style>
+        /* YENİ: Temel Fontlar ve Noktalı Arka Plan Deseni */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc;
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .font-heading { font-family: 'Montserrat', sans-serif; }
+        
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
+        
         .red-card-visual { width: 10px; height: 14px; background-color: #ef4444; display: inline-block; border-radius: 2px; margin-right: 6px; border: 1px solid #b91c1c; vertical-align: middle; }
+        
+        /* Dropdown okunu gizleme (Arşiv menüsü için - Şayet kullanılırsa) */
+        select.season-select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right .5rem center; background-size: 1.2em; padding-right: 2rem; }
     </style>
 </head>
-<body class="min-h-screen bg-gray-50 text-gray-800 font-sans">
+<body class="min-h-screen text-gray-800">
 
     <div id="app"></div>
 
@@ -56,10 +76,10 @@
         };
 
         const SPORTS = {
-            FUTBOL_ERKEK: { id: 'futbol_erkek', name: 'Futbol Erkek', icon: icons.soccer, color: 'bg-green-700', unit: 'Gol', desc: 'G: 3, B: 1, M: 0 Puan' },
-            FUTSAL_ERKEK: { id: 'futsal_erkek', name: 'Futsal Erkek', icon: icons.soccer, color: 'bg-teal-700', unit: 'Gol', desc: 'G: 3, B: 1, M: 0 Puan' },
-            BASKETBOL_ERKEK: { id: 'basketbol_erkek', name: 'Basketbol Erkek', icon: icons.dribbble, color: 'bg-orange-600', unit: 'Sayı', desc: 'G: 2, M: 1 Puan' },
-            BASKETBOL_KADIN: { id: 'basketbol_kadin', name: 'Basketbol Kadın', icon: icons.dribbble, color: 'bg-orange-500', unit: 'Sayı', desc: 'G: 2, M: 1 Puan' },
+            FUTBOL_ERKEK: { id: 'futbol_erkek', name: 'Futbol Erkek', icon: icons.soccer, color: 'bg-green-600', unit: 'Gol', desc: 'G: 3, B: 1, M: 0 Puan' },
+            FUTSAL_ERKEK: { id: 'futsal_erkek', name: 'Futsal Erkek', icon: icons.soccer, color: 'bg-teal-600', unit: 'Gol', desc: 'G: 3, B: 1, M: 0 Puan' },
+            BASKETBOL_ERKEK: { id: 'basketbol_erkek', name: 'Basketbol Erkek', icon: icons.dribbble, color: 'bg-orange-500', unit: 'Sayı', desc: 'G: 2, M: 1 Puan' },
+            BASKETBOL_KADIN: { id: 'basketbol_kadin', name: 'Basketbol Kadın', icon: icons.dribbble, color: 'bg-orange-400', unit: 'Sayı', desc: 'G: 2, M: 1 Puan' },
             VOLEYBOL_ERKEK: { id: 'voleybol_erkek', name: 'Voleybol Erkek', icon: icons.users, color: 'bg-blue-600', unit: 'Set', desc: '3-0/3-1: (3p), 3-2: (2p-1p)' },
             VOLEYBOL_KADIN: { id: 'voleybol_kadin', name: 'Voleybol Kadın', icon: icons.users, color: 'bg-blue-500', unit: 'Set', desc: '3-0/3-1: (3p), 3-2: (2p-1p)' }
         };
@@ -80,13 +100,11 @@
         };
 
         // --- YARDIMCI GÜVENLİK (SANITIZATION) FONKSİYONU ---
-        // Bu kalkan, Firebase'e gidip gelen kuralların/listelerin bozulmasını matematiksel olarak %100 engeller.
         function getSafeCategoryData(data) {
             const safeObj = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
             if (data && typeof data === 'object' && !Array.isArray(data)) {
                 ['futbol', 'futsal', 'basketbol', 'voleybol'].forEach(key => {
                     if (Array.isArray(data[key])) {
-                        // Sadece string olan gerçek kuralları alır, boşlukları (null, undefined) atar.
                         safeObj[key] = data[key].filter(item => typeof item === 'string' && item !== '');
                     }
                 });
@@ -95,7 +113,6 @@
         }
 
         // --- ŞİFRELEME (HASH) FONKSİYONU ---
-        // Kullanıcının girdiği şifreyi geri döndürülemez SHA-256 formatına çevirir
         async function hashPassword(password) {
             const encoder = new TextEncoder();
             const data = encoder.encode(password);
@@ -113,9 +130,13 @@
             activeRuleTab: 'futbol', 
             showMatchForm: false, 
             activeCardMatchId: null,
+            
+            seasonName: '31. SITKI KOÇMAN REKTÖRLÜK KUPASI',
+            announcements: [],
+            fixtureFilter: 'ALL',
+
             rules: getSafeCategoryData({}), 
             predefinedTeams: getSafeCategoryData({}),
-            // "1234" şifresinin SHA-256 karşılığı varsayılan olarak eklendi
             credentials: { username: 'admin', password: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4' },
             leagues: {
                 futbol_erkek: { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false },
@@ -135,7 +156,6 @@
         let saveError = null;
         const appId = window.__app_id || 'default-app-id';
 
-        // Çıkış yaparken kaydedilmeyen veri varsa uyarı ver
         window.addEventListener('beforeunload', function (e) {
             if (isSaving) {
                 e.preventDefault();
@@ -145,7 +165,6 @@
 
         async function initFirebase() {
             try {
-                // SİZİN GİRDİĞİNİZ FIREBASE CONFIG KODU
                 const firebaseConfig = {
                     apiKey: "AIzaSyDE-aV1fyeod1ZQ5qpe_4d9oUbJ7UOjtrE",
                     authDomain: "spor-takip-3a965.firebaseapp.com",
@@ -166,7 +185,6 @@
                     currentUser = user;
                 });
 
-                // GÜVENLİ KİMLİK DOĞRULAMA (ÖNCE AUTHENTICATION, SONRA VERİTABANI)
                 try {
                     const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null;
                     if (initialAuthToken) {
@@ -187,7 +205,6 @@
                     }
                 }
 
-                // KİMLİK DOĞRULAMASI BİTTİKTEN SONRA VERİTABANINI DİNLE
                 listenToState();
 
             } catch (error) {
@@ -205,9 +222,11 @@
                     state.leagues = data.leagues || state.leagues;
                     state.credentials = data.credentials || state.credentials;
                     
-                    // DÜZELTME: Gelen veriler ne kadar bozuk olursa olsun strict modda filtrelenir.
                     state.rules = getSafeCategoryData(data.rules);
                     state.predefinedTeams = getSafeCategoryData(data.predefinedTeams);
+                    
+                    state.seasonName = data.seasonName || '31. SITKI KOÇMAN REKTÖRLÜK KUPASI';
+                    state.announcements = data.announcements || [];
                     
                     isRemoteUpdate = true;
                     try {
@@ -216,7 +235,6 @@
                         isRemoteUpdate = false;
                     }
                 } else {
-                    // İlk defa girildiğinde veritabanı boşsa anında ilk şablonu kaydet
                     saveState();
                 }
             }, (err) => {
@@ -234,11 +252,11 @@
 
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'appState', 'mainData');
             try {
-                // DÜZELTME: Buluta gönderilirken de veriler kalkan fonksiyonundan zorla geçirilir. JSON.stringify hatası engellenir.
                 const safeStateToSave = JSON.parse(JSON.stringify({
+                    seasonName: state.seasonName,
+                    announcements: state.announcements,
                     leagues: state.leagues,
                     predefinedTeams: getSafeCategoryData(state.predefinedTeams),
-                    // credentials içindeki hashlenmiş şifre korunur
                     credentials: state.credentials || { username: 'admin', password: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4' },
                     rules: getSafeCategoryData(state.rules)
                 }));
@@ -332,28 +350,55 @@
 
         // --- GLOBAL ERİŞİM İÇİN FONKSİYONLARI WİNDOW'A ATA ---
         
-        // CANLI KAYIT GÖSTERGESİ (UI)
         window.renderSaveStatus = function() {
             const el = document.getElementById('save-status');
             if(!el) return;
             if(saveError) {
-                el.innerHTML = `<span class="text-red-100 font-bold bg-red-900/60 px-2 py-1.5 rounded shadow-sm flex items-center gap-1" title="${saveError}">⚠️ Hata (Kaydedilemedi)</span>`;
+                el.innerHTML = `<span class="text-red-100 bg-red-600/80 px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 backdrop-blur-sm transition-all" title="${saveError}">⚠️ HATA</span>`;
             } else if(isSaving) {
-                el.innerHTML = `<span class="animate-pulse bg-black/20 px-2 py-1.5 rounded shadow-sm flex items-center gap-1">⏳ Kaydediliyor...</span>`;
+                el.innerHTML = `<span class="bg-black/20 text-white/90 px-3 py-1.5 rounded-full shadow-sm flex items-center gap-2 backdrop-blur-sm transition-all">
+                                    <svg class="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> 
+                                    <span class="tracking-wider text-[10px] font-bold">KAYDEDİLİYOR</span>
+                                </span>`;
             } else if(db) {
-                el.innerHTML = `<span class="text-green-50 bg-black/20 px-2 py-1.5 rounded shadow-sm flex items-center gap-1">✓ Buluta Kaydedildi</span>`;
+                el.innerHTML = `<span class="text-green-50 bg-black/20 px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 backdrop-blur-sm transition-all">
+                                    <svg class="w-3 h-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> 
+                                    <span class="tracking-wider text-[10px] font-bold">KAYDEDİLDİ</span>
+                                </span>`;
             } else {
-                el.innerHTML = `<span class="text-white/70">Bağlanıyor...</span>`;
+                el.innerHTML = `<span class="text-white/70 text-[10px]">Bağlanıyor...</span>`;
             }
         };
 
-        window.setActiveSport = function(id) { state.activeSport = id; render(); };
+        window.setFixtureFilter = function(val) {
+            state.fixtureFilter = val;
+            render();
+        }
+
+        window.addAnn = function() {
+            const input = document.getElementById('newAnnInput');
+            if(!input || !input.value.trim()) return;
+            
+            const today = new Date();
+            const dateStr = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')} ${String(today.getHours()).padStart(2, '0')}:${String(today.getMinutes()).padStart(2, '0')}`;
+            
+            state.announcements.unshift({ id: Date.now(), text: input.value.trim(), date: dateStr });
+            saveState(); render();
+        }
+        
+        window.removeAnn = function(index) {
+            if(!confirm('Bu duyuruyu silmek istediğinize emin misiniz?')) return;
+            state.announcements.splice(index, 1);
+            saveState(); render();
+        }
+
+        window.setActiveSport = function(id) { state.activeSport = id; state.fixtureFilter = 'ALL'; render(); };
         window.toggleMatchForm = function() { state.showMatchForm = !state.showMatchForm; render(); };
         window.toggleView = function(v) { state.currentView = v; render(); };
         window.togglePanel = function() { state.isPanelOpen = !state.isPanelOpen; render(); };
         window.handleNav = function(v, s = null) { 
             if(v) state.currentView = v; 
-            if(s) state.activeSport = s; 
+            if(s) { state.activeSport = s; state.fixtureFilter = 'ALL'; }
             state.isPanelOpen = false; 
             render(); 
         };
@@ -364,10 +409,8 @@
             const validUser = state.credentials?.username || 'admin';
             const validPass = state.credentials?.password || '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4';
 
-            // Girilen şifreyi hash'e çevir
             const hashedPass = await hashPassword(pass);
 
-            // Eğer veritabanında eski (düz metin) şifre duruyorsa diye kontrol
             let isMatch = false;
             if (validPass.length !== 64) {
                 isMatch = (pass === validPass);
@@ -391,9 +434,7 @@
             const val = input.value.trim();
             if(!val) return;
             
-            // Veri yapısı güvenliğe alınır
             state.rules = getSafeCategoryData(state.rules);
-            
             state.rules[state.activeRuleTab].push(val);
             saveState();
             render();
@@ -442,7 +483,6 @@
         window.addTeam = function(inputId, groupSelectId, managerId, coachId) {
             const name = document.getElementById(inputId).value.trim();
             const group = document.getElementById(groupSelectId).value;
-            // DÜZELTME 1: Dashboard'dan 3 argüman geldiğinde undefined hatası fırlatmasını önlemek için güvenli seçim yapıldı.
             const manager = (document.getElementById(managerId)?.value || '').trim();
             const coach = (document.getElementById(coachId)?.value || '').trim();
             
@@ -454,7 +494,6 @@
         
         window.removeTeam = function(id) {
             if(!confirm('Bu takımı ve tüm verilerini silmek istediğinize emin misiniz?')) return;
-            // DÜZELTME 2: ID'lerin tür uyuşmazlığından dolayı silinmemesi hatası giderildi (String ile karşılaştırma yapıldı).
             state.leagues[state.activeSport].teams = state.leagues[state.activeSport].teams.filter(t => String(t.id) !== String(id));
             state.leagues[state.activeSport].fixtures.forEach(round => { round.matches = round.matches.filter(m => String(m.home.id) !== String(id) && String(m.away.id) !== String(id)); });
             saveState(); render();
@@ -474,7 +513,6 @@
             const timeRaw = document.getElementById('activeTime').value;
             const homeId = document.getElementById('activeHome').value;
             const awayId = document.getElementById('activeAway').value;
-            // YENİ: Maç türünü (Grup veya Eleme) al
             const matchType = document.getElementById('activeMatchType') ? document.getElementById('activeMatchType').value : 'group';
 
             if (!rawDate || !timeRaw || !homeId || !awayId) { alert("Lütfen tarih, saat, ev sahibi ve deplasman takımlarını eksiksiz doldurun!"); return; }
@@ -493,7 +531,7 @@
                 time: time, 
                 group: getTeam(homeId, state.activeSport).group, 
                 cards: [],
-                isKnockout: matchType === 'knockout' // YENİ: Maçın eleme maçı olup olmadığını kaydet
+                isKnockout: matchType === 'knockout'
             });
             sortFixturesByDate(league.fixtures); state.showMatchForm = false; saveState(); render();
         };
@@ -545,17 +583,18 @@
             if(!state.credentials) state.credentials = {};
             
             state.credentials.username = newUser; 
-            // Yeni şifreyi veritabanına düz metin olarak DEĞİL, hashleyerek kaydet
             state.credentials.password = await hashPassword(newPass);
             
             saveState(); alert('Giriş bilgileri başarıyla güncellendi!'); render();
         };
-        window.startLeague = function() { state.leagues[state.activeSport].isStarted = true; saveState(); render(); };
+        
+        window.startLeague = function() { 
+            state.leagues[state.activeSport].isStarted = true; saveState(); render(); 
+        };
 
-        // AD DEĞİŞİKLİĞİ YAPILAN FONKSİYONLAR (ÇAKIŞMAYI ÖNLER)
         window.exportSystemData = function() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
-            const node = document.createElement('a'); node.setAttribute("href", dataStr); node.setAttribute("download", "spor_ligi_2026.json");
+            const node = document.createElement('a'); node.setAttribute("href", dataStr); node.setAttribute("download", "spor_ligi_yedek.json");
             document.body.appendChild(node); node.click(); node.remove();
         };
 
@@ -571,6 +610,8 @@
                         state.predefinedTeams = getSafeCategoryData(json.predefinedTeams);
                         state.credentials = json.credentials || state.credentials; 
                         state.rules = getSafeCategoryData(json.rules);
+                        state.seasonName = json.seasonName || state.seasonName;
+                        state.announcements = json.announcements || state.announcements;
                         saveState(); render(); alert('Sistem Yedeği Yüklendi!'); 
                     }
                 } catch (er) { alert('Hata: Lütfen geçerli bir yedek dosyası (.json) seçin!'); }
@@ -591,7 +632,6 @@
 
             currentLeague.fixtures.forEach(round => {
                 round.matches.forEach(match => {
-                    // DÜZELTME: Eğer maç bir eleme/final maçıysa, puan tablosunu (ve grup kırmızı kartlarını) atla
                     if (match.isKnockout) return;
 
                     if(match.cards) { match.cards.forEach(card => { if(stats[card.teamId]) stats[card.teamId].redCards++; }); }
@@ -637,68 +677,81 @@
 
         function getGroupTableHTML(groupId) {
             const standings = calculateGroupStandings(groupId);
-            if (standings.length === 0) return `<div class="p-4 text-center text-xs text-gray-400 bg-white rounded-xl mb-6 border">${groupId} GRUBU Henüz Boş</div>`;
+            if (standings.length === 0) return `<div class="p-5 text-center text-sm font-medium text-gray-400 bg-white/80 rounded-2xl mb-6 border border-gray-100 shadow-sm">${groupId} Grubu Henüz Boş</div>`;
 
             const isBask = state.activeSport.includes('basketbol');
             const isVolley = state.activeSport.includes('voleybol');
             const isFut = state.activeSport.includes('futbol') || state.activeSport.includes('futsal');
 
             let headers = `
-                <th class="px-2 py-2 text-left w-8">#</th>
-                <th class="px-2 py-2 text-left">Takım</th>
-                <th class="px-1 py-2 text-center" title="Oynadığı Maç">O</th>
-                <th class="px-1 py-2 text-center" title="Galibiyet">G</th>
-                ${isFut ? '<th class="px-1 py-2 text-center" title="Beraberlik">B</th>' : ''}
-                <th class="px-1 py-2 text-center" title="Mağlubiyet">M</th>
+                <th class="px-3 py-3 text-left w-8 rounded-tl-lg">#</th>
+                <th class="px-2 py-3 text-left">Takım</th>
+                <th class="px-1 py-3 text-center" title="Oynadığı Maç">O</th>
+                <th class="px-1 py-3 text-center" title="Galibiyet">G</th>
+                ${isFut ? '<th class="px-1 py-3 text-center" title="Beraberlik">B</th>' : ''}
+                <th class="px-1 py-3 text-center" title="Mağlubiyet">M</th>
             `;
             
             if (isBask) {
-                headers += `<th class="px-1 py-2 text-center" title="Attığı Sayı">A</th><th class="px-1 py-2 text-center" title="Yediği Sayı">Y</th><th class="px-1 py-2 text-center" title="Averaj">AV</th>`;
+                headers += `<th class="px-1 py-3 text-center" title="Attığı Sayı">A</th><th class="px-1 py-3 text-center" title="Yediği Sayı">Y</th><th class="px-1 py-3 text-center" title="Averaj">AV</th>`;
             } else if (isVolley) {
-                headers += `<th class="px-1 py-2 text-center" title="Sayı (Kazanılan Set)">S</th>`;
+                headers += `<th class="px-1 py-3 text-center" title="Sayı (Kazanılan Set)">S</th>`;
             } else if (isFut) {
-                 headers += `<th class="px-1 py-2 text-center" title="Atılan Gol">A</th><th class="px-1 py-2 text-center" title="Yenilen Gol">Y</th><th class="px-1 py-2 text-center" title="Averaj">AV</th>`;               
+                 headers += `<th class="px-1 py-3 text-center" title="Atılan Gol">A</th><th class="px-1 py-3 text-center" title="Yenilen Gol">Y</th><th class="px-1 py-3 text-center" title="Averaj">AV</th>`;               
             }
 
             headers += `
-                <th class="px-1 py-2 text-center font-bold text-blue-600" title="Puan">P</th>
-                <th class="px-1 py-2 text-center text-red-600 font-bold" title="Kırmızı Kart">KK</th>
-                ${state.isLoggedIn ? '<th class="px-1 py-2 text-center w-6"></th>' : ''}
+                <th class="px-1 py-3 text-center font-bold text-blue-700" title="Puan">P</th>
+                <th class="px-1 py-3 text-center text-red-600 font-bold" title="Kırmızı Kart">KK</th>
+                ${state.isLoggedIn ? '<th class="px-2 py-3 text-center w-8 rounded-tr-lg"></th>' : ''}
             `;
 
             let rowsHtml = standings.map((team, index) => {
                 let extraCells = '';
-                let drawCell = isFut ? `<td class="px-1 py-3 text-center text-gray-600 font-medium">${team.drawn}</td>` : '';
+                let drawCell = isFut ? `<td class="px-1 py-3 text-center text-gray-500 font-medium">${team.drawn}</td>` : '';
 
                 if (isBask || isFut) {
-                    extraCells = `<td class="px-1 py-3 text-center text-gray-600">${team.gf}</td><td class="px-1 py-3 text-center text-gray-600">${team.ga}</td><td class="px-1 py-3 text-center font-medium ${team.gd > 0 ? 'text-green-600' : (team.gd < 0 ? 'text-red-600' : 'text-gray-600')}">${team.gd > 0 ? '+' + team.gd : team.gd}</td>`;
+                    extraCells = `<td class="px-1 py-3 text-center text-gray-500">${team.gf}</td><td class="px-1 py-3 text-center text-gray-500">${team.ga}</td><td class="px-1 py-3 text-center font-bold ${team.gd > 0 ? 'text-green-600' : (team.gd < 0 ? 'text-red-600' : 'text-gray-500')}">${team.gd > 0 ? '+' + team.gd : team.gd}</td>`;
                 } else if (isVolley) {
-                    extraCells = `<td class="px-1 py-3 text-center text-gray-600">${team.gf}</td>`;
+                    extraCells = `<td class="px-1 py-3 text-center text-gray-500">${team.gf}</td>`;
                 }
 
-                let deleteBtn = state.isLoggedIn ? `<td class="px-1 py-3 text-center"><button onclick="window.removeTeam(${team.id})" class="text-gray-300 hover:text-red-500 transition">${icons.trash}</button></td>` : '';
-                let topTurBadge = index < 2 ? `<span class="ml-1 text-[8px] bg-green-100 text-green-700 px-1 rounded uppercase tracking-tighter">Üst Tur</span>` : '';
+                let deleteBtn = state.isLoggedIn ? `<td class="px-2 py-3 text-center"><button onclick="window.removeTeam(${team.id})" class="text-gray-300 hover:text-red-500 hover:scale-110 transition-transform">${icons.trash}</button></td>` : '';
+                let topTurBadge = index < 2 ? `<span class="ml-1.5 text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-tight shadow-sm">Üst Tur</span>` : '';
 
                 return `
-                <tr class="${index < 2 ? 'bg-green-50/60 border-l-4 border-green-500 font-bold' : 'hover:bg-gray-50'} group transition-colors">
-                    <td class="px-2 py-3 ${index < 2 ? 'text-green-700' : 'text-gray-400'}">${index + 1}</td>
-                    <td class="px-2 py-3 text-gray-800 relative cursor-help" title="Yönetici: ${team.manager || '-'} | Antrenör: ${team.coach || '-'}">${team.name} ${topTurBadge}</td>
-                    <td class="px-1 py-3 text-center text-gray-600">${team.played}</td>
-                    <td class="px-1 py-3 text-center text-green-600 font-medium">${team.won}</td>
+                <tr class="${index < 2 ? 'bg-green-50/40 font-bold' : 'hover:bg-gray-50'} group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm relative z-10 border-b border-gray-50 last:border-0">
+                    <td class="px-3 py-3 ${index < 2 ? 'text-green-600' : 'text-gray-400 font-medium'}">${index + 1}</td>
+                    <td class="px-2 py-3 text-gray-800 relative cursor-help" title="Yönetici: ${team.manager || '-'} | Antrenör: ${team.coach || '-'}">
+                        <div class="flex items-center">
+                            ${team.name} ${topTurBadge}
+                        </div>
+                    </td>
+                    <td class="px-1 py-3 text-center text-gray-500">${team.played}</td>
+                    <td class="px-1 py-3 text-center text-green-600 font-bold">${team.won}</td>
                     ${drawCell}
-                    <td class="px-1 py-3 text-center text-red-600 font-medium">${team.lost}</td>
+                    <td class="px-1 py-3 text-center text-red-500 font-bold">${team.lost}</td>
                     ${extraCells}
-                    <td class="px-1 py-3 text-center font-bold text-blue-600">${team.points}</td>
-                    <td class="px-1 py-3 text-center font-bold text-red-600">${team.redCards}</td>
+                    <td class="px-1 py-3 text-center font-black text-blue-700 text-sm">${team.points}</td>
+                    <td class="px-1 py-3 text-center font-bold text-red-500">${team.redCards}</td>
                     ${deleteBtn}
                 </tr>
                 `;
             }).join('');
 
             return `
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-                    <div class="p-3 bg-gray-800 text-white flex justify-between items-center"><h2 class="font-bold text-sm text-white">${groupId} GRUBU</h2></div>
-                    <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="bg-gray-50 text-gray-500 uppercase"><tr>${headers}</tr></thead><tbody class="divide-y divide-gray-100">${rowsHtml}</tbody></table></div>
+                <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden mb-6 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] transition-shadow duration-300">
+                    <div class="p-3 bg-gradient-to-r from-gray-800 to-gray-700 flex justify-between items-center">
+                        <h2 class="font-heading font-extrabold text-sm text-white tracking-widest pl-2">${groupId} GRUBU</h2>
+                    </div>
+                    <div class="overflow-x-auto p-1">
+                        <table class="w-full text-xs md:text-sm">
+                            <thead class="bg-gray-50/80 text-gray-500 uppercase text-[10px] tracking-wider font-semibold">
+                                <tr>${headers}</tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>
                 </div>
             `;
         }
@@ -712,47 +765,72 @@
                 { id: 'voleybol', name: 'Voleybol', icon: icons.users }
             ];
             
+            // YENİ: Sekmeler hap (pill) tasarımına geçirildi
             let tabButtonsHtml = tabs.map(tab => `
                 <button onclick="window.setActiveRuleTab('${tab.id}')" 
-                        class="flex items-center gap-2 px-5 py-3 rounded-t-xl font-bold transition whitespace-nowrap border-b-2 ${state.activeRuleTab === tab.id ? 'border-blue-600 text-blue-600 bg-blue-50/50' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'}">
-                    <span class="opacity-80">${tab.icon}</span> ${tab.name}
+                        class="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold transition-all duration-300 whitespace-nowrap border-2 ${state.activeRuleTab === tab.id ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-200 transform scale-105' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-100'}">
+                    <span class="opacity-90">${tab.icon}</span> ${tab.name}
                 </button>
             `).join('');
 
-            const currentRules = (state.rules && state.rules[state.activeRuleTab]) ? state.rules[state.activeRuleTab] : [];
+            const targetRules = state.rules;
+            const currentRules = (targetRules && targetRules[state.activeRuleTab]) ? targetRules[state.activeRuleTab] : [];
             
             let rulesHtml = currentRules.map((rule, index) => `
-                <li class="flex justify-between items-start bg-white p-3 md:p-4 rounded-xl border border-gray-200 shadow-sm mb-3 text-sm md:text-base text-gray-700 leading-relaxed transition hover:border-blue-200">
-                    <span class="flex-1 mr-4 font-medium"><span class="text-blue-500 font-bold mr-2">•</span> ${rule}</span>
+                <li class="flex justify-between items-start bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 mb-3 text-sm md:text-base text-gray-700 leading-relaxed transition-all duration-200">
+                    <span class="flex-1 mr-4 font-medium"><span class="text-blue-500 font-black mr-2 text-lg leading-none">•</span> ${rule}</span>
                     ${state.isLoggedIn ? `
                     <div class="flex gap-1 mt-0.5">
-                        <button onclick="window.editRule(${index})" class="text-blue-400 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition" title="Düzenle">${icons.edit}</button>
-                        <button onclick="window.removeRule(${index})" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Sil">${icons.trash}</button>
+                        <button onclick="window.editRule(${index})" class="text-blue-400 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors" title="Düzenle">${icons.edit}</button>
+                        <button onclick="window.removeRule(${index})" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Sil">${icons.trash}</button>
                     </div>
                     ` : ''}
                 </li>
             `).join('');
 
             if(currentRules.length === 0) {
-                rulesHtml = `<div class="text-center text-gray-400 text-sm py-8 italic bg-gray-50 rounded-xl border border-gray-100">Bu branş için henüz kural eklenmemiş.</div>`;
+                rulesHtml = `<div class="text-center text-gray-400 text-sm py-10 font-medium bg-gray-50 rounded-2xl border border-dashed border-gray-200">Bu branş için henüz kural eklenmemiş.</div>`;
             }
 
             const activeTabName = tabs.find(t => t.id === state.activeRuleTab)?.name || 'Futbol';
 
+            // Duyurular Panosu (Daha modern)
+            let annHtml = `
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 mb-8 relative shadow-sm print:hidden fade-in">
+                <h3 class="font-heading font-extrabold text-amber-800 text-sm mb-4 flex items-center gap-2 tracking-wide uppercase">📢 Duyurular & Son Dakika</h3>
+                <ul class="space-y-3">
+                    ${state.announcements.map((ann, i) => `
+                        <li class="text-sm text-amber-900 flex justify-between items-center bg-white/60 p-3 rounded-xl border border-amber-100 shadow-sm">
+                            <span class="font-medium">${ann.text} <span class="text-[10px] font-bold text-amber-600 ml-2 bg-amber-100 px-2 py-0.5 rounded-full">${ann.date}</span></span>
+                            ${state.isLoggedIn ? `<button onclick="window.removeAnn(${i})" class="text-red-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-md transition-colors">✕</button>` : ''}
+                        </li>
+                    `).join('')}
+                    ${state.announcements.length === 0 ? '<li class="text-sm text-amber-600/70 font-medium italic">Şu an için yeni bir duyuru bulunmuyor.</li>' : ''}
+                </ul>
+                ${state.isLoggedIn ? `
+                    <div class="mt-5 flex gap-2 pt-2">
+                        <input type="text" id="newAnnInput" placeholder="Yeni duyuru yazın..." onkeypress="if(event.key === 'Enter') window.addAnn()" class="flex-1 text-sm border border-amber-200 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-amber-400 bg-white/80 shadow-inner">
+                        <button onclick="window.addAnn()" class="bg-amber-500 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-amber-600 transition-colors shadow-sm active:scale-95">Yayınla</button>
+                    </div>
+                ` : ''}
+            </div>`;
+
             return `
-                <div class="max-w-5xl mx-auto fade-in mt-4" id="pdf-content">
-                    <div class="bg-white p-4 md:p-8 rounded-2xl shadow-xl border border-gray-100">
-                        <div class="flex flex-col items-center mb-6 border-b border-gray-100 pb-6">
-                            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
-                                ${icons.trophy}
+                <div class="max-w-5xl mx-auto fade-in mt-4">
+                    ${annHtml}
+                    
+                    <div id="pdf-content" class="bg-white p-5 md:p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+                        <div class="flex flex-col items-center mb-8 border-b border-gray-100 pb-8">
+                            <div class="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-5 shadow-inner border border-blue-200/50 transform rotate-3">
+                                <div class="-rotate-3 scale-125">${icons.trophy}</div>
                             </div>
-                            <h2 class="text-xl md:text-3xl font-extrabold text-center text-gray-800 uppercase tracking-wide leading-tight">
-                                31. SITKI KOÇMAN REKTÖRLÜK KUPASI<br><span class="text-blue-600">MÜSABAKA KURALLARI</span>
+                            <h2 class="text-2xl md:text-4xl font-heading font-black text-center text-gray-800 uppercase tracking-tight leading-tight">
+                                ${state.seasonName}<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">MÜSABAKA KURALLARI</span>
                             </h2>
                         </div>
                         
                         <!-- SEKMELER (TABS) -->
-                        <div class="flex overflow-x-auto custom-scrollbar border-b border-gray-200 mb-6 print:hidden">
+                        <div class="flex overflow-x-auto custom-scrollbar mb-8 gap-2 px-1 py-2 print:hidden">
                             ${tabButtonsHtml}
                         </div>
 
@@ -760,11 +838,11 @@
                         <h3 class="hidden print:block text-center font-bold text-xl mb-4 text-blue-800 border-b pb-2 uppercase">${activeTabName} MÜSABAKA KURALLARI</h3>
                         
                         ${state.isLoggedIn ? `
-                        <div class="bg-blue-50/50 p-4 md:p-5 rounded-xl border border-blue-100 mb-6 print:hidden">
+                        <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 mb-8 print:hidden">
                             <h3 class="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">${icons.plus} ${activeTabName} Kurallarına Yeni Madde Ekle</h3>
                             <div class="flex flex-col sm:flex-row gap-3 items-center">
-                                <input type="text" id="newRuleInput" onkeypress="if(event.key === 'Enter') window.addRule()" class="flex-1 w-full border border-blue-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm" placeholder="Buraya kural maddesini yazın...">
-                                <button onclick="window.addRule()" class="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-bold shadow-md hover:bg-blue-700 transition whitespace-nowrap">Ekle</button>
+                                <input type="text" id="newRuleInput" onkeypress="if(event.key === 'Enter') window.addRule()" class="flex-1 w-full border border-blue-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-inner" placeholder="Buraya kural maddesini yazın...">
+                                <button onclick="window.addRule()" class="w-full sm:w-auto bg-blue-600 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-blue-700 hover:shadow-lg active:scale-95 transition-all whitespace-nowrap">Ekle</button>
                             </div>
                         </div>
                         ` : ''}
@@ -786,35 +864,47 @@
                 const hName = getTeam(match.h, state.activeSport).name;
                 const aName = getTeam(match.a, state.activeSport).name;
 
+                // YENİ: Kazanan Takım Vurgusu
+                let isHomeWinner = false;
+                let isAwayWinner = false;
+                let isPlayed = match.hs !== '' && match.as !== '';
+                if(isPlayed) {
+                    if (parseFloat(match.hs) > parseFloat(match.as)) isHomeWinner = true;
+                    else if (parseFloat(match.as) > parseFloat(match.hs)) isAwayWinner = true;
+                }
+
+                let homeClassRO = isHomeWinner ? "font-black text-gray-900 text-base" : (isAwayWinner ? "font-medium text-gray-400" : "font-bold text-gray-700");
+                let awayClassRO = isAwayWinner ? "font-black text-gray-900 text-base" : (isHomeWinner ? "font-medium text-gray-400" : "font-bold text-gray-700");
+
                 if (state.isLoggedIn) {
                     return `
-                        <div class="bg-white border-2 border-gray-200 rounded-lg p-2 shadow-sm text-xs">
-                            <div class="flex gap-2 items-center mb-1">
-                                <select class="w-full border rounded p-1 outline-none bg-gray-50" onchange="window.updateKnockout('${stage}', ${index}, 'h', this.value)">
+                        <div class="bg-white border-2 border-gray-100 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow text-xs">
+                            <div class="flex gap-2 items-center mb-2">
+                                <select class="w-full border border-gray-200 rounded-lg p-1.5 outline-none bg-gray-50 focus:ring-2 focus:ring-blue-400 font-medium ${isHomeWinner ? 'text-gray-900 font-bold' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'h', this.value)">
                                     <option value="">Ev Sahibi Seç</option>
                                     ${teams.map(t => `<option value="${t.id}" ${match.h == t.id ? 'selected' : ''}>[${t.group}] ${t.name}</option>`).join('')}
                                 </select>
-                                <input type="number" value="${match.hs}" class="w-10 text-center border rounded p-1 font-bold" onchange="window.updateKnockout('${stage}', ${index}, 'hs', this.value)">
+                                <input type="number" value="${match.hs}" class="w-12 h-8 text-center border border-gray-200 rounded-lg bg-gray-50 font-heading font-bold focus:ring-2 focus:ring-blue-400 outline-none ${isHomeWinner ? 'bg-green-50 text-green-700' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'hs', this.value)">
                             </div>
                             <div class="flex gap-2 items-center">
-                                <select class="w-full border rounded p-1 outline-none bg-gray-50" onchange="window.updateKnockout('${stage}', ${index}, 'a', this.value)">
+                                <select class="w-full border border-gray-200 rounded-lg p-1.5 outline-none bg-gray-50 focus:ring-2 focus:ring-blue-400 font-medium ${isAwayWinner ? 'text-gray-900 font-bold' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'a', this.value)">
                                     <option value="">Deplasman Seç</option>
                                     ${teams.map(t => `<option value="${t.id}" ${match.a == t.id ? 'selected' : ''}>[${t.group}] ${t.name}</option>`).join('')}
                                 </select>
-                                <input type="number" value="${match.as}" class="w-10 text-center border rounded p-1 font-bold" onchange="window.updateKnockout('${stage}', ${index}, 'as', this.value)">
+                                <input type="number" value="${match.as}" class="w-12 h-8 text-center border border-gray-200 rounded-lg bg-gray-50 font-heading font-bold focus:ring-2 focus:ring-blue-400 outline-none ${isAwayWinner ? 'bg-green-50 text-green-700' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'as', this.value)">
                             </div>
                         </div>
                     `;
                 } else {
                     return `
-                        <div class="bg-white border-2 ${match.hs !== '' && match.hs > match.as ? 'border-green-300' : 'border-gray-200'} rounded-lg overflow-hidden shadow-sm text-sm">
-                            <div class="flex justify-between items-center p-2 border-b bg-gray-50">
-                                <span class="font-medium text-gray-700 truncate">${match.h ? hName : '-'}</span>
-                                <span class="font-bold text-gray-900 bg-white border px-2 py-0.5 rounded">${match.hs !== '' ? match.hs : '-'}</span>
+                        <div class="bg-white border-2 ${match.hs !== '' && match.hs > match.as ? 'border-green-400 shadow-green-100' : 'border-gray-100'} rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow text-sm">
+                            <div class="flex justify-between items-center p-3 border-b border-gray-50 bg-gray-50/50">
+                                <span class="${homeClassRO} truncate transition-all duration-300">${match.h ? hName : '-'}</span>
+                                <span class="font-heading font-black text-lg bg-white border border-gray-100 px-3 rounded-lg shadow-sm ${isHomeWinner ? 'text-green-600' : 'text-gray-800'}">${match.hs !== '' ? match.hs : '-'}</span>
                             </div>
-                            <div class="flex justify-between items-center p-2">
-                                <span class="font-medium text-gray-700 truncate">${match.a ? aName : '-'}</span>
-                                <span class="font-bold text-gray-900 bg-white border px-2 py-0.5 rounded">${match.as !== '' ? match.as : '-'}</span>
+                            <div class="flex justify-between items-center p-3">
+                                <span class="${awayClassRO} truncate transition-all duration-300">${match.a ? aName : '-'}</span>
+                                <span class="font-heading font-black text-lg bg-white border border-gray-100 px-3 rounded-lg shadow-sm ${isAwayWinner ? 'text-green-600' : 'text-gray-800'}">${match.as !== '' ? match.as : '-'}</span>
                             </div>
                         </div>
                     `;
@@ -822,27 +912,27 @@
             };
 
             return `
-                <div class="bg-gray-100 p-6 rounded-xl border border-gray-200" ${!isEmbedded ? 'id="pdf-content"' : ''}>
-                    <h2 class="text-xl font-bold text-center mb-8 uppercase tracking-widest text-gray-800">Eleme Turları (Şampiyonluk Ağacı)</h2>
-                    <div class="flex flex-col md:flex-row justify-between gap-8 md:gap-4 relative">
+                <div class="bg-gradient-to-b from-gray-50 to-gray-100 p-6 md:p-8 rounded-3xl border border-gray-200" ${!isEmbedded ? 'id="pdf-content"' : ''}>
+                    <h2 class="text-xl font-heading font-black text-center mb-10 uppercase tracking-[0.2em] text-gray-800">Şampiyonluk Ağacı</h2>
+                    <div class="flex flex-col md:flex-row justify-between gap-8 md:gap-6 relative">
                         <!-- Çeyrek Final -->
                         <div class="w-full md:w-1/3 flex flex-col justify-around gap-4 z-10">
-                            <div class="text-center font-bold text-gray-500 mb-2 text-xs uppercase bg-gray-200 rounded py-1">Çeyrek Final</div>
+                            <div class="text-center font-bold text-gray-500 mb-2 text-xs uppercase tracking-widest bg-gray-200/50 rounded-full py-1.5 border border-gray-200">Çeyrek Final</div>
                             ${kn.qf.map((m, i) => renderMatchBox(m, 'qf', i)).join('<div class="h-2 md:h-8"></div>')}
                         </div>
                         <!-- Yarı Final -->
                         <div class="w-full md:w-1/3 flex flex-col justify-around gap-12 z-10">
-                            <div class="text-center font-bold text-gray-500 mb-2 text-xs uppercase bg-gray-200 rounded py-1 mt-6 md:mt-0">Yarı Final</div>
+                            <div class="text-center font-bold text-gray-500 mb-2 text-xs uppercase tracking-widest bg-gray-200/50 rounded-full py-1.5 border border-gray-200 mt-6 md:mt-0">Yarı Final</div>
                             ${kn.sf.map((m, i) => renderMatchBox(m, 'sf', i)).join('<div class="h-12 md:h-24"></div>')}
                         </div>
                         <!-- Final -->
                         <div class="w-full md:w-1/3 flex flex-col justify-center gap-4 z-10">
-                            <div class="text-center font-bold text-yellow-600 mb-2 text-xs uppercase bg-yellow-100 rounded py-1 mt-6 md:mt-0">FİNAL</div>
+                            <div class="text-center font-bold text-yellow-700 mb-2 text-xs uppercase tracking-widest bg-gradient-to-r from-yellow-100 to-amber-100 rounded-full py-1.5 border border-yellow-200 mt-6 md:mt-0 shadow-sm">FİNAL</div>
                             ${renderMatchBox(kn.f[0], 'f', 0)}
-                            <div class="mt-8 text-center">${icons.trophy}</div>
+                            <div class="mt-10 flex justify-center transform hover:scale-110 transition-transform duration-500"><div class="p-4 bg-yellow-50 rounded-full text-yellow-500 shadow-lg border border-yellow-100">${icons.trophy}</div></div>
                         </div>
                     </div>
-                    ${state.isLoggedIn ? `<p class="text-center text-xs text-gray-400 mt-8 italic">Gruplardaki ilk 2 takımı manuel olarak boşluklara atayabilirsiniz.</p>` : ''}
+                    ${state.isLoggedIn ? `<p class="text-center text-xs font-medium text-gray-400 mt-10 italic">Yönetici Notu: Gruplardaki ilk 2 takımı manuel olarak boşluklara atayabilirsiniz.</p>` : ''}
                 </div>
             `;
         }
@@ -860,122 +950,172 @@
             const datalistHtml = `<datalist id="teamDatalist">${datalistOptions.map(t => `<option value="${t}"></option>`).join('')}</datalist>`;
             
             return `
-                <div class="bg-white p-2">
+                <div class="bg-transparent p-1 md:p-2">
                     ${datalistHtml}
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2 space-y-6">
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8">
+                        <div class="xl:col-span-2 space-y-6 md:space-y-8">
                             ${state.isLoggedIn ? `
-                            <div class="bg-white rounded-xl shadow-sm border border-blue-100 p-4 flex flex-wrap gap-2 items-center fade-in print:hidden">
-                                <select id="activeGroupSelectDashboard" class="border rounded px-2 py-1.5 text-xs font-bold bg-gray-50"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
-                                <input type="text" list="teamDatalist" id="activeTeamInputDashboard" placeholder="Hızlı Takım Seç/Yaz..." class="flex-1 border rounded px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-blue-500">
-                                <input type="text" id="activeManagerInputDashboard" placeholder="Yönetici" class="hidden sm:block border rounded px-3 py-1.5 text-xs outline-none w-24">
-                                <button onclick="window.addTeam('activeTeamInputDashboard', 'activeGroupSelectDashboard', 'activeManagerInputDashboard')" class="bg-blue-600 text-white px-4 py-1.5 rounded text-xs font-bold hover:bg-blue-700 transition">Ekle</button>
+                            <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm border border-blue-100 p-4 md:p-5 flex flex-wrap gap-3 items-center fade-in print:hidden">
+                                <select id="activeGroupSelectDashboard" class="border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold bg-gray-50 focus:ring-2 focus:ring-blue-400 outline-none"><option value="A">A Grb</option><option value="B">B Grb</option><option value="C">C Grb</option><option value="D">D Grb</option></select>
+                                <input type="text" list="teamDatalist" id="activeTeamInputDashboard" placeholder="Hızlı Takım Seç/Yaz..." class="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 shadow-inner">
+                                <input type="text" id="activeManagerInputDashboard" placeholder="Yönetici (Ops.)" class="hidden sm:block border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none w-32 shadow-inner focus:ring-2 focus:ring-blue-500">
+                                <button onclick="window.addTeam('activeTeamInputDashboard', 'activeGroupSelectDashboard', 'activeManagerInputDashboard')" class="bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-md">Takım Ekle</button>
                             </div>
                             ` : ''}
 
                             <!-- Gruplar ve Eleme Aşaması tek PDF bloğuna alındı -->
-                            <div id="pdf-content" class="bg-white p-2 rounded-xl">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div id="pdf-content" class="bg-transparent rounded-xl">
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                                     ${['A','B','C','D'].map(g => getGroupTableHTML(g)).join('')}
                                 </div>
                                 
-                                <!-- ELEME AŞAMASI (Çeyrek Final'den Başlar) -->
-                                <div class="mt-8 pt-6 border-t border-gray-100">
+                                <!-- ELEME AŞAMASI -->
+                                <div class="mt-8 pt-2">
                                     ${renderKnockout(true)}
                                 </div>
                             </div>
                         </div>
 
-                        <div class="lg:col-span-1">
-                            <div class="bg-white rounded-xl shadow-sm border h-[calc(100vh-140px)] flex flex-col sticky top-24 print:h-auto">
-                                <div class="p-4 border-b bg-gray-50 flex justify-between items-center print:bg-white">
-                                    <h2 class="font-bold text-sm text-gray-800 tracking-tight">Fikstür & Sonuçlar</h2>
-                                    ${state.isLoggedIn ? `<button onclick="window.toggleMatchForm()" class="bg-green-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider print:hidden">${state.showMatchForm ? 'Kapat' : '+ Yeni Maç'}</button>` : ''}
+                        <div class="xl:col-span-1">
+                            <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 h-auto xl:h-[calc(100vh-120px)] flex flex-col xl:sticky top-24 print:h-auto overflow-hidden">
+                                <div class="p-5 border-b border-gray-100 bg-white flex justify-between items-center print:bg-white z-20 shadow-sm">
+                                    <h2 class="font-heading font-black text-base text-gray-800 tracking-tight uppercase">Fikstür & Sonuçlar</h2>
+                                    ${state.isLoggedIn ? `<button onclick="window.toggleMatchForm()" class="bg-green-600 text-white px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-md hover:bg-green-700 active:scale-95 transition-all print:hidden">${state.showMatchForm ? 'Kapat' : '+ Yeni Maç'}</button>` : ''}
+                                </div>
+                                
+                                <!-- FİKSTÜR FİLTRELEME -->
+                                <div class="bg-gray-50/80 px-5 py-3 border-b border-gray-100 flex justify-between items-center print:hidden z-10">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filtrele:</span>
+                                    <select onchange="window.setFixtureFilter(this.value)" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white font-bold text-gray-600 focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm">
+                                        <option value="ALL" ${state.fixtureFilter === 'ALL' ? 'selected' : ''}>Tüm Maçlar</option>
+                                        <option value="A" ${state.fixtureFilter === 'A' ? 'selected' : ''}>A Grubu</option>
+                                        <option value="B" ${state.fixtureFilter === 'B' ? 'selected' : ''}>B Grubu</option>
+                                        <option value="C" ${state.fixtureFilter === 'C' ? 'selected' : ''}>C Grubu</option>
+                                        <option value="D" ${state.fixtureFilter === 'D' ? 'selected' : ''}>D Grubu</option>
+                                        <option value="KNOCKOUT" ${state.fixtureFilter === 'KNOCKOUT' ? 'selected' : ''}>Eleme Maçları</option>
+                                    </select>
                                 </div>
 
                                 ${state.showMatchForm && state.isLoggedIn ? `
-                                    <div class="bg-green-50 p-4 border-b fade-in print:hidden">
-                                        <div class="mb-2">
-                                            <select id="activeMatchType" class="w-full border border-purple-200 rounded p-1.5 text-xs bg-purple-50 text-purple-700 font-bold outline-none focus:ring-1 focus:ring-purple-400">
+                                    <div class="bg-green-50/50 p-5 border-b border-green-100 fade-in print:hidden">
+                                        <div class="mb-3">
+                                            <select id="activeMatchType" class="w-full border border-purple-200 rounded-xl p-2.5 text-sm bg-purple-50 text-purple-700 font-bold outline-none focus:ring-2 focus:ring-purple-400 shadow-inner">
                                                 <option value="group">Puanlı Grup Maçı</option>
                                                 <option value="knockout">Eleme / Final Maçı (Puansız)</option>
                                             </select>
                                         </div>
-                                        <div class="grid grid-cols-2 gap-2 mb-2">
-                                            <input type="date" id="activeDate" class="border rounded p-1.5 text-xs bg-white outline-none">
-                                            <input type="time" id="activeTime" value="14:00" class="border rounded p-1.5 text-xs bg-white">
+                                        <div class="grid grid-cols-2 gap-3 mb-3">
+                                            <input type="date" id="activeDate" class="border border-gray-200 rounded-xl p-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-green-400 shadow-inner">
+                                            <input type="time" id="activeTime" value="14:00" class="border border-gray-200 rounded-xl p-2.5 text-sm bg-white focus:ring-2 focus:ring-green-400 shadow-inner">
                                         </div>
-                                        <div class="space-y-2 mb-2">
-                                            <select id="activeHome" class="w-full border rounded p-1.5 text-xs bg-white">${activeLeague.teams.map(t => `<option value="${t.id}">[${t.group}] ${t.name}</option>`).join('')}</select>
-                                            <select id="activeAway" class="w-full border rounded p-1.5 text-xs bg-white">${activeLeague.teams.map(t => `<option value="${t.id}">[${t.group}] ${t.name}</option>`).join('')}</select>
+                                        <div class="space-y-3 mb-4">
+                                            <select id="activeHome" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm bg-white font-medium focus:ring-2 focus:ring-green-400 shadow-inner">${activeLeague.teams.map(t => `<option value="${t.id}">[${t.group}] ${t.name}</option>`).join('')}</select>
+                                            <select id="activeAway" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm bg-white font-medium focus:ring-2 focus:ring-green-400 shadow-inner">${activeLeague.teams.map(t => `<option value="${t.id}">[${t.group}] ${t.name}</option>`).join('')}</select>
                                         </div>
-                                        <button onclick="window.addActiveMatch()" class="w-full bg-green-600 text-white py-2 rounded text-xs font-bold shadow hover:bg-green-700 transition">Fikstüre Kaydet</button>
+                                        <button onclick="window.addActiveMatch()" class="w-full bg-green-600 text-white py-3 rounded-xl text-sm font-bold shadow-md hover:bg-green-700 active:scale-95 transition-all">Maçı Fikstüre Kaydet</button>
                                     </div>
                                 ` : ''}
 
-                                <div class="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar print:overflow-visible">
-                                    ${activeLeague.fixtures.map((round, rIndex) => `
-                                        <div class="bg-white rounded-lg border overflow-hidden shadow-sm">
-                                            <div class="bg-gray-100 px-3 py-1.5 text-[10px] font-bold text-center uppercase text-gray-500 border-b print:bg-gray-200">${round.date}</div>
-                                            <div class="divide-y divide-gray-100">
-                                                ${round.matches.map(match => {
+                                <div class="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar print:overflow-visible bg-gray-50/30">
+                                    ${activeLeague.fixtures.map((round, rIndex) => {
+                                        let filteredMatches = round.matches;
+                                        if (state.fixtureFilter !== 'ALL') {
+                                            if (state.fixtureFilter === 'KNOCKOUT') { filteredMatches = round.matches.filter(m => m.isKnockout); } 
+                                            else { filteredMatches = round.matches.filter(m => !m.isKnockout && m.group === state.fixtureFilter); }
+                                        }
+                                        if (filteredMatches.length === 0) return '';
+                                        
+                                        return `
+                                        <div>
+                                            <div class="flex items-center gap-3 mb-3">
+                                                <div class="h-px bg-gray-200 flex-1"></div>
+                                                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest bg-white px-3 py-1 rounded-full border border-gray-100 shadow-sm">${round.date}</span>
+                                                <div class="h-px bg-gray-200 flex-1"></div>
+                                            </div>
+                                            <div class="space-y-3">
+                                                ${filteredMatches.map(match => {
                                                     const h = getTeam(match.home.id, state.activeSport);
                                                     const a = getTeam(match.away.id, state.activeSport);
                                                     const cardFormOpen = state.activeCardMatchId === match.id;
+                                                    const isReadOnly = !state.isLoggedIn;
+                                                    
+                                                    // YENİ: Kazanan Takım Vurgusu Hesaplaması
+                                                    let isHomeWinner = false;
+                                                    let isAwayWinner = false;
+                                                    let isPlayed = match.homeScore !== '' && match.awayScore !== '';
+                                                    
+                                                    if (isPlayed) {
+                                                        const hScore = parseFloat(match.homeScore);
+                                                        const aScore = parseFloat(match.awayScore);
+                                                        if (hScore > aScore) isHomeWinner = true;
+                                                        else if (aScore > hScore) isAwayWinner = true;
+                                                    }
+                                                    
+                                                    let homeTextClass = isHomeWinner ? "text-[15px] font-black text-gray-900 drop-shadow-sm scale-105 origin-right" : (isAwayWinner ? "text-sm font-medium text-gray-400 opacity-80" : "text-sm font-bold text-gray-800");
+                                                    let awayTextClass = isAwayWinner ? "text-[15px] font-black text-gray-900 drop-shadow-sm scale-105 origin-left" : (isHomeWinner ? "text-sm font-medium text-gray-400 opacity-80" : "text-sm font-bold text-gray-800");
+                                                    
+                                                    // YENİ: Skor Kutusu Renklendirmesi
+                                                    let homeInputClass = isHomeWinner ? "bg-green-50 border-green-200 text-green-700" : (isPlayed ? "bg-gray-50 border-gray-100 text-gray-500" : "bg-white border-gray-200 text-gray-800");
+                                                    let awayInputClass = isAwayWinner ? "bg-green-50 border-green-200 text-green-700" : (isPlayed ? "bg-gray-50 border-gray-100 text-gray-500" : "bg-white border-gray-200 text-gray-800");
+
+                                                    // YENİ: Maç Kartı (Ticket) Tasarımı
                                                     return `
-                                                    <div class="p-3 hover:bg-gray-50 transition relative group/match">
-                                                        ${state.isLoggedIn ? `<button onclick="window.removeFixtureMatch('${match.id}')" class="absolute top-1 right-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all p-1.5 rounded-md shadow-sm border border-red-100 print:hidden" title="Maçı Fikstürden Sil">${icons.trash}</button>` : ''}
+                                                    <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] hover:shadow-md hover:-translate-y-1 transition-all duration-300 relative group/match">
+                                                        ${state.isLoggedIn ? `<button onclick="window.removeFixtureMatch('${match.id}')" class="absolute -top-2 -right-2 bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all p-1.5 rounded-full shadow-sm border border-red-200 print:hidden opacity-0 group-hover/match:opacity-100 z-20" title="Maçı Sil">${icons.trash}</button>` : ''}
                                                         
-                                                        <div class="flex justify-between items-center mb-1">
-                                                            <span class="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tight ${match.isKnockout ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'}">
-                                                                ${match.isKnockout ? 'ELEME MAÇI' : match.group + ' GRUBU'}
+                                                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-50">
+                                                            <span class="text-[9px] px-2 py-1 rounded-md font-bold uppercase tracking-widest shadow-sm ${match.isKnockout ? 'bg-gradient-to-r from-purple-100 to-fuchsia-100 text-purple-700 border border-purple-200' : 'bg-gray-100 text-gray-600 border border-gray-200'}">
+                                                                ${match.isKnockout ? '⚡ ELEME MAÇI' : match.group + ' GRUBU'}
                                                             </span>
-                                                            <span class="text-[10px] text-gray-400 flex items-center gap-1 font-medium">${icons.clock} ${match.time || '--:--'}</span>
+                                                            <span class="text-[11px] text-gray-500 flex items-center gap-1 font-semibold bg-gray-50 px-2 py-1 rounded-md border border-gray-100">${icons.clock} ${match.time || '--:--'}</span>
                                                         </div>
-                                                        <div class="flex justify-between items-center gap-1 ${state.isLoggedIn ? 'pr-6' : ''}">
-                                                            <span class="text-xs font-semibold w-[40%] text-right truncate" title="Yönetici: ${h.manager || '-'} | Antrenör: ${h.coach || '-'}">${h.name}</span>
-                                                            <div class="flex items-center gap-1">
-                                                                <input type="number" ${!state.isLoggedIn ? 'readonly' : ''} value="${match.homeScore}" onchange="window.updateScore(${rIndex}, '${match.id}', 'homeScore', this.value)" class="w-8 h-7 text-center border rounded text-xs font-bold outline-none focus:ring-1 focus:ring-blue-400 shadow-sm ${!state.isLoggedIn ? 'bg-gray-50 border-transparent cursor-default' : 'bg-white'}">
-                                                                <span class="text-gray-300 font-bold">:</span>
-                                                                <input type="number" ${!state.isLoggedIn ? 'readonly' : ''} value="${match.awayScore}" onchange="window.updateScore(${rIndex}, '${match.id}', 'awayScore', this.value)" class="w-8 h-7 text-center border rounded text-xs font-bold outline-none focus:ring-1 focus:ring-blue-400 shadow-sm ${!state.isLoggedIn ? 'bg-gray-50 border-transparent cursor-default' : 'bg-white'}">
+                                                        
+                                                        <div class="flex justify-between items-center gap-2">
+                                                            <span class="${homeTextClass} w-[40%] text-right truncate transition-all duration-300" title="${h.name}"> ${h.name}</span>
+                                                            
+                                                            <div class="flex items-center gap-1.5 bg-gray-50/50 p-1.5 rounded-xl border border-gray-100 shadow-inner">
+                                                                <input type="number" ${isReadOnly ? 'readonly' : ''} value="${match.homeScore}" onchange="window.updateScore(${rIndex}, '${match.id}', 'homeScore', this.value)" class="w-10 h-10 text-center rounded-lg text-xl font-heading font-black outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${isReadOnly ? 'bg-transparent border-none ' + (isHomeWinner ? 'text-green-600' : '') : homeInputClass + ' shadow-sm'}">
+                                                                <span class="text-gray-300 font-black text-lg">:</span>
+                                                                <input type="number" ${isReadOnly ? 'readonly' : ''} value="${match.awayScore}" onchange="window.updateScore(${rIndex}, '${match.id}', 'awayScore', this.value)" class="w-10 h-10 text-center rounded-lg text-xl font-heading font-black outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${isReadOnly ? 'bg-transparent border-none ' + (isAwayWinner ? 'text-green-600' : '') : awayInputClass + ' shadow-sm'}">
                                                             </div>
-                                                            <span class="text-xs font-semibold w-[40%] text-left truncate" title="Yönetici: ${a.manager || '-'} | Antrenör: ${a.coach || '-'}">${a.name}</span>
+                                                            
+                                                            <span class="${awayTextClass} w-[40%] text-left truncate transition-all duration-300" title="${a.name}"> ${a.name}</span>
                                                         </div>
                                                         
                                                         ${(match.cards && match.cards.length > 0) ? `
-                                                            <div class="mt-2 space-y-1">
+                                                            <div class="mt-3 pt-3 border-t border-dashed border-gray-100 space-y-1.5">
                                                                 ${match.cards.map(card => `
-                                                                    <div class="flex items-center justify-between bg-red-50 px-2 py-1 rounded border border-red-100 text-[9px] text-red-700 font-medium">
-                                                                        <div class="flex items-center"><span class="red-card-visual print:border print:border-red-500"></span> <b>${card.playerName}</b> (${getTeam(card.teamId, state.activeSport).name})</div>
-                                                                        ${state.isLoggedIn ? `<button onclick="window.removeCardFromMatch('${match.id}', ${card.id})" class="text-red-300 hover:text-red-600 font-bold print:hidden">✕</button>` : ''}
+                                                                    <div class="flex items-center justify-between bg-red-50/50 px-2.5 py-1.5 rounded-lg border border-red-100 text-[10px] text-red-800 font-medium">
+                                                                        <div class="flex items-center"><span class="red-card-visual shadow-sm"></span> <b>${card.playerName}</b> <span class="text-red-500/70 ml-1">(${getTeam(card.teamId, state.activeSport).name})</span></div>
+                                                                        ${state.isLoggedIn ? `<button onclick="window.removeCardFromMatch('${match.id}', ${card.id})" class="text-red-400 hover:text-red-700 bg-white rounded p-0.5 shadow-sm print:hidden">✕</button>` : ''}
                                                                     </div>
                                                                 `).join('')}
                                                             </div>
                                                         ` : ''}
 
                                                         ${state.isLoggedIn ? `
-                                                        <div class="mt-2 text-center print:hidden">
-                                                            <button onclick="window.toggleCardForm('${match.id}')" class="text-[9px] text-red-500 font-bold hover:underline transition">
-                                                                ${cardFormOpen ? 'Vazgeç' : '+ Kırmızı Kart Ekle'}
+                                                        <div class="mt-3 text-center print:hidden">
+                                                            <button onclick="window.toggleCardForm('${match.id}')" class="text-[10px] text-red-500 font-bold bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition-colors border border-red-100">
+                                                                ${cardFormOpen ? 'İptal Et' : '+ Kırmızı Kart'}
                                                             </button>
                                                         </div>
                                                         ` : ''}
 
                                                         ${cardFormOpen && state.isLoggedIn ? `
-                                                            <div class="mt-2 p-2 bg-red-50 rounded border border-red-100 fade-in print:hidden">
-                                                                <select id="cardTeamSelect_${match.id}" class="w-full text-[10px] p-1 border rounded mb-1 bg-white outline-none">
+                                                            <div class="mt-3 p-3 bg-red-50 rounded-xl border border-red-200 fade-in print:hidden shadow-inner">
+                                                                <select id="cardTeamSelect_${match.id}" class="w-full text-xs p-2 border border-red-100 rounded-lg mb-2 bg-white outline-none focus:ring-2 focus:ring-red-400 font-medium">
                                                                     <option value="${match.home.id}">${h.name}</option>
                                                                     <option value="${match.away.id}">${a.name}</option>
                                                                 </select>
-                                                                <input type="text" id="cardPlayerInput_${match.id}" placeholder="Kart Alan Oyuncu Adı..." class="w-full text-[10px] p-1 border rounded mb-1 outline-none">
-                                                                <button onclick="window.addCardToMatch('${match.id}')" class="w-full bg-red-600 text-white py-1 rounded text-[10px] font-bold hover:bg-red-700 transition">Kaydet</button>
+                                                                <input type="text" id="cardPlayerInput_${match.id}" placeholder="Oyuncu Adı Soyadı..." class="w-full text-xs p-2 border border-red-100 rounded-lg mb-2 outline-none focus:ring-2 focus:ring-red-400 shadow-inner">
+                                                                <button onclick="window.addCardToMatch('${match.id}')" class="w-full bg-red-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-red-700 shadow-md active:scale-95 transition-all">Kartı Kaydet</button>
                                                             </div>
                                                         ` : ''}
                                                     </div>
                                                 `}).join('')}
                                             </div>
                                         </div>
-                                    `).join('')}
+                                    `}).join('')}
                                 </div>
                             </div>
                         </div>
@@ -987,106 +1127,107 @@
         function renderSettings() {
             if(!state.isLoggedIn) {
                 return `
-                    <div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl border border-gray-100 fade-in mt-12">
-                        <div class="flex flex-col items-center mb-6">
-                            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
-                                ${icons.trophy}
-                            </div>
-                            <h2 class="text-2xl font-bold text-gray-800">Yönetici Girişi</h2>
-                            <p class="text-sm text-gray-500">Sadece yetkili kullanıcılar erişebilir</p>
+                    <div class="max-w-md mx-auto bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-xl border border-gray-100 fade-in mt-16 text-center">
+                        <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-blue-200/50 transform rotate-3">
+                            <div class="-rotate-3 scale-125">${icons.trophy}</div>
                         </div>
-                        <div class="space-y-4">
+                        <h2 class="text-2xl font-heading font-black text-gray-800 mb-2">Yönetici Girişi</h2>
+                        <p class="text-sm text-gray-500 mb-8 font-medium">Sadece yetkili kullanıcılar erişebilir</p>
+                        
+                        <div class="space-y-4 text-left">
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Kullanıcı Adı</label>
-                                <input type="text" id="loginUser" class="w-full border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-400" placeholder="admin">
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Kullanıcı Adı</label>
+                                <input type="text" id="loginUser" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50 shadow-inner font-medium" placeholder="admin">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Şifre</label>
-                                <input type="password" id="loginPass" class="w-full border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-400" placeholder="1234">
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Şifre</label>
+                                <input type="password" id="loginPass" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50 shadow-inner font-medium" placeholder="••••">
                             </div>
-                            <button onclick="window.login()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold shadow-md hover:bg-blue-700 transition">Giriş Yap</button>
+                            <button onclick="window.login()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold shadow-md hover:bg-blue-700 hover:shadow-lg active:scale-95 transition-all mt-2 uppercase tracking-wide">Giriş Yap</button>
                         </div>
                     </div>
                 `;
             }
 
             return `
-                <div class="max-w-5xl mx-auto space-y-6 fade-in mt-4">
-                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-                        <div class="flex justify-between items-center mb-6 border-b pb-4">
-                            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">${icons.settings} Yönetim Paneli</h2>
-                            <button onclick="window.logout()" class="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg font-bold hover:bg-red-100 transition">Oturumu Kapat</button>
+                <div class="max-w-5xl mx-auto space-y-6 fade-in mt-4 pb-12">
+                    <div class="bg-white/95 backdrop-blur-md p-6 md:p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+                        <div class="flex justify-between items-center mb-8 border-b border-gray-100 pb-5">
+                            <h2 class="text-2xl font-heading font-black text-gray-800 flex items-center gap-3">
+                                <span class="bg-gray-100 p-2 rounded-xl text-gray-600">${icons.settings}</span> Yönetim Paneli
+                            </h2>
+                            <button onclick="window.logout()" class="text-xs bg-red-50 text-red-600 border border-red-100 px-4 py-2 rounded-xl font-bold hover:bg-red-500 hover:text-white active:scale-95 transition-all shadow-sm">Oturumu Kapat</button>
                         </div>
                         
                         <!-- ÖN TANIMLI TAKIMLAR YÖNETİMİ -->
                         <div class="mt-4">
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">Ön Tanımlı Takım Listeleri</h3>
-                            <p class="text-xs text-gray-500 mb-4">Aşağıda oluşturduğunuz listeler, takım ekleme ekranlarında seçilebilir seçenekler olarak görünecektir.</p>
+                            <h3 class="text-lg font-bold text-gray-800 mb-1">Ön Tanımlı Takım Listeleri</h3>
+                            <p class="text-xs text-gray-500 mb-6 font-medium">Aşağıda oluşturduğunuz listeler, takım ekleme ekranlarında hızlı seçim (açılır menü) olarak görünecektir.</p>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                                 <!-- Futbol Listesi -->
-                                <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-                                    <h4 class="font-bold text-green-800 mb-3 flex items-center gap-2">${icons.soccer} Futbol</h4>
+                                <div class="bg-green-50/50 p-4 rounded-2xl border border-green-100 shadow-sm">
+                                    <h4 class="font-bold text-green-800 mb-3 flex items-center gap-2"><span class="bg-green-100 p-1.5 rounded-lg">${icons.soccer}</span> Futbol</h4>
                                     <div class="flex gap-2 mb-4">
-                                        <input type="text" id="newPreFutbol" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('futbol', 'newPreFutbol')" class="flex-1 border border-green-200 rounded p-2 text-xs outline-none focus:ring-2 focus:ring-green-400" placeholder="Yeni Takım...">
-                                        <button onclick="window.addPredefinedTeam('futbol', 'newPreFutbol')" class="bg-green-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-green-700 transition">Ekle</button>
+                                        <input type="text" id="newPreFutbol" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('futbol', 'newPreFutbol')" class="flex-1 border border-green-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-green-400 shadow-inner bg-white" placeholder="Yeni Takım...">
+                                        <button onclick="window.addPredefinedTeam('futbol', 'newPreFutbol')" class="bg-green-600 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-green-700 active:scale-95 transition-all shadow-sm">Ekle</button>
                                     </div>
-                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
                                         ${(state.predefinedTeams?.futbol || []).map((t, i) => `
-                                            <li class="flex justify-between items-center bg-white p-2 rounded border border-green-100 text-xs shadow-sm">
-                                                <span class="font-medium text-gray-700">${t}</span>
-                                                <button onclick="window.removePredefinedTeam('futbol', ${i})" class="text-red-400 hover:text-red-600 transition" title="Sil">${icons.trash}</button>
+                                            <li class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-green-50 text-xs shadow-[0_2px_5px_-3px_rgba(0,0,0,0.1)]">
+                                                <span class="font-semibold text-gray-700">${t}</span>
+                                                <button onclick="window.removePredefinedTeam('futbol', ${i})" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-1 rounded transition-colors" title="Sil">${icons.trash}</button>
                                             </li>
                                         `).join('')}
                                     </ul>
                                 </div>
 
                                 <!-- Futsal Listesi -->
-                                <div class="bg-teal-50 p-4 rounded-lg border border-teal-100">
-                                    <h4 class="font-bold text-teal-800 mb-3 flex items-center gap-2">${icons.soccer} Futsal</h4>
+                                <div class="bg-teal-50/50 p-4 rounded-2xl border border-teal-100 shadow-sm">
+                                    <h4 class="font-bold text-teal-800 mb-3 flex items-center gap-2"><span class="bg-teal-100 p-1.5 rounded-lg">${icons.soccer}</span> Futsal</h4>
                                     <div class="flex gap-2 mb-4">
-                                        <input type="text" id="newPreFutsal" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('futsal', 'newPreFutsal')" class="flex-1 border border-teal-200 rounded p-2 text-xs outline-none focus:ring-2 focus:ring-teal-400" placeholder="Yeni Takım...">
-                                        <button onclick="window.addPredefinedTeam('futsal', 'newPreFutsal')" class="bg-teal-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-teal-700 transition">Ekle</button>
+                                        <input type="text" id="newPreFutsal" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('futsal', 'newPreFutsal')" class="flex-1 border border-teal-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-teal-400 shadow-inner bg-white" placeholder="Yeni Takım...">
+                                        <button onclick="window.addPredefinedTeam('futsal', 'newPreFutsal')" class="bg-teal-600 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-teal-700 active:scale-95 transition-all shadow-sm">Ekle</button>
                                     </div>
-                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
                                         ${(state.predefinedTeams?.futsal || []).map((t, i) => `
-                                            <li class="flex justify-between items-center bg-white p-2 rounded border border-teal-100 text-xs shadow-sm">
-                                                <span class="font-medium text-gray-700">${t}</span>
-                                                <button onclick="window.removePredefinedTeam('futsal', ${i})" class="text-red-400 hover:text-red-600 transition" title="Sil">${icons.trash}</button>
+                                            <li class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-teal-50 text-xs shadow-[0_2px_5px_-3px_rgba(0,0,0,0.1)]">
+                                                <span class="font-semibold text-gray-700">${t}</span>
+                                                <button onclick="window.removePredefinedTeam('futsal', ${i})" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-1 rounded transition-colors" title="Sil">${icons.trash}</button>
                                             </li>
                                         `).join('')}
                                     </ul>
                                 </div>
 
                                 <!-- Basketbol Listesi -->
-                                <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
-                                    <h4 class="font-bold text-orange-800 mb-3 flex items-center gap-2">${icons.dribbble} Basketbol</h4>
+                                <div class="bg-orange-50/50 p-4 rounded-2xl border border-orange-100 shadow-sm">
+                                    <h4 class="font-bold text-orange-800 mb-3 flex items-center gap-2"><span class="bg-orange-100 p-1.5 rounded-lg">${icons.dribbble}</span> Basketbol</h4>
                                     <div class="flex gap-2 mb-4">
-                                        <input type="text" id="newPreBask" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('basketbol', 'newPreBask')" class="flex-1 border border-orange-200 rounded p-2 text-xs outline-none focus:ring-2 focus:ring-orange-400" placeholder="Yeni Takım...">
-                                        <button onclick="window.addPredefinedTeam('basketbol', 'newPreBask')" class="bg-orange-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-orange-700 transition">Ekle</button>
+                                        <input type="text" id="newPreBask" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('basketbol', 'newPreBask')" class="flex-1 border border-orange-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-orange-400 shadow-inner bg-white" placeholder="Yeni Takım...">
+                                        <button onclick="window.addPredefinedTeam('basketbol', 'newPreBask')" class="bg-orange-500 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-orange-600 active:scale-95 transition-all shadow-sm">Ekle</button>
                                     </div>
-                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
                                         ${(state.predefinedTeams?.basketbol || []).map((t, i) => `
-                                            <li class="flex justify-between items-center bg-white p-2 rounded border border-orange-100 text-xs shadow-sm">
-                                                <span class="font-medium text-gray-700">${t}</span>
-                                                <button onclick="window.removePredefinedTeam('basketbol', ${i})" class="text-red-400 hover:text-red-600 transition" title="Sil">${icons.trash}</button>
+                                            <li class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-orange-50 text-xs shadow-[0_2px_5px_-3px_rgba(0,0,0,0.1)]">
+                                                <span class="font-semibold text-gray-700">${t}</span>
+                                                <button onclick="window.removePredefinedTeam('basketbol', ${i})" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-1 rounded transition-colors" title="Sil">${icons.trash}</button>
                                             </li>
                                         `).join('')}
                                     </ul>
                                 </div>
 
                                 <!-- Voleybol Listesi -->
-                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                                    <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2">${icons.users} Voleybol</h4>
+                                <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 shadow-sm">
+                                    <h4 class="font-bold text-blue-800 mb-3 flex items-center gap-2"><span class="bg-blue-100 p-1.5 rounded-lg">${icons.users}</span> Voleybol</h4>
                                     <div class="flex gap-2 mb-4">
-                                        <input type="text" id="newPreVol" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('voleybol', 'newPreVol')" class="flex-1 border border-blue-200 rounded p-2 text-xs outline-none focus:ring-2 focus:ring-blue-400" placeholder="Yeni Takım...">
-                                        <button onclick="window.addPredefinedTeam('voleybol', 'newPreVol')" class="bg-blue-600 text-white px-3 py-2 rounded text-xs font-bold hover:bg-blue-700 transition">Ekle</button>
+                                        <input type="text" id="newPreVol" onkeypress="if(event.key === 'Enter') window.addPredefinedTeam('voleybol', 'newPreVol')" class="flex-1 border border-blue-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-400 shadow-inner bg-white" placeholder="Yeni Takım...">
+                                        <button onclick="window.addPredefinedTeam('voleybol', 'newPreVol')" class="bg-blue-600 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-sm">Ekle</button>
                                     </div>
-                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <ul class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
                                         ${(state.predefinedTeams?.voleybol || []).map((t, i) => `
-                                            <li class="flex justify-between items-center bg-white p-2 rounded border border-blue-100 text-xs shadow-sm">
-                                                <span class="font-medium text-gray-700">${t}</span>
-                                                <button onclick="window.removePredefinedTeam('voleybol', ${i})" class="text-red-400 hover:text-red-600 transition" title="Sil">${icons.trash}</button>
+                                            <li class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-blue-50 text-xs shadow-[0_2px_5px_-3px_rgba(0,0,0,0.1)]">
+                                                <span class="font-semibold text-gray-700">${t}</span>
+                                                <button onclick="window.removePredefinedTeam('voleybol', ${i})" class="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-1 rounded transition-colors" title="Sil">${icons.trash}</button>
                                             </li>
                                         `).join('')}
                                     </ul>
@@ -1095,41 +1236,40 @@
                         </div>
 
                         <!-- GİRİŞ BİLGİLERİNİ GÜNCELLEME -->
-                        <div class="mt-6 border-t border-gray-100 pt-6">
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">Giriş Bilgilerini Güncelle</h3>
-                            <p class="text-xs text-gray-500 mb-4">Yönetici paneline erişmek için kullandığınız kullanıcı adı ve şifreyi buradan değiştirebilirsiniz.</p>
+                        <div class="mt-8 border-t border-gray-100 pt-8">
+                            <h3 class="text-lg font-bold text-gray-800 mb-1">Giriş Bilgilerini Güncelle</h3>
+                            <p class="text-xs text-gray-500 mb-5 font-medium">Yönetici paneline erişmek için kullandığınız kullanıcı adı ve şifreyi buradan değiştirebilirsiniz.</p>
                             
-                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50/80 p-5 rounded-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-5 shadow-sm">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Kullanıcı Adı</label>
-                                    <input type="text" id="newUsernameInput" class="w-full border border-gray-300 rounded p-2 text-sm outline-none focus:ring-2 focus:ring-gray-400 bg-white" value="${state.credentials?.username || 'admin'}">
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Yeni Kullanıcı Adı</label>
+                                    <input type="text" id="newUsernameInput" class="w-full border border-gray-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-blue-400 bg-white shadow-inner font-medium" value="${state.credentials?.username || 'admin'}">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Şifre</label>
-                                    <!-- Değer boşaltıldı (karmaşık hash'in ekranda görünmesini engeller) -->
-                                    <input type="text" id="newPasswordInput" placeholder="Değiştirmek için yeni şifrenizi girin..." class="w-full border border-gray-300 rounded p-2 text-sm outline-none focus:ring-2 focus:ring-gray-400 bg-white" value="">
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Yeni Şifre</label>
+                                    <input type="text" id="newPasswordInput" placeholder="Değiştirmek için yeni şifrenizi girin..." class="w-full border border-gray-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-blue-400 bg-white shadow-inner font-medium" value="">
                                 </div>
                                 <div class="md:col-span-2 flex justify-end mt-2">
-                                    <button onclick="window.changeCredentials()" class="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded text-sm font-bold shadow-sm transition">Bilgileri Kaydet</button>
+                                    <button onclick="window.changeCredentials()" class="bg-gray-800 hover:bg-gray-900 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-md hover:shadow-lg active:scale-95 transition-all">Bilgileri Güncelle ve Kaydet</button>
                                 </div>
                             </div>
                         </div>
 
                         <!-- VERİ VE ÇIKTI İŞLEMLERİ -->
-                        <div class="mt-6 border-t border-gray-100 pt-6">
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">Veri ve Çıktı İşlemleri</h3>
-                            <p class="text-xs text-gray-500 mb-4">Puan durumunu veya kuralları PDF olarak alabilir, tüm sistemi bilgisayarınıza yedekleyip yükleyebilirsiniz.</p>
+                        <div class="mt-8 border-t border-gray-100 pt-8">
+                            <h3 class="text-lg font-bold text-gray-800 mb-1">Veri ve Çıktı İşlemleri</h3>
+                            <p class="text-xs text-gray-500 mb-5 font-medium">Şu an bulunduğunuz ekranı PDF olarak alabilir, tüm sisteminizi bilgisayarınıza yedekleyip yükleyebilirsiniz.</p>
                             
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <button onclick="window.exportPDF()" class="flex items-center justify-center gap-2 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 px-4 py-3 rounded-lg text-sm font-bold transition shadow-sm">
-                                    ${icons.pdf} Şu Anki Sayfayı PDF İndir
+                                <button onclick="window.exportPDF()" class="flex items-center justify-center gap-2.5 bg-white text-red-600 border-2 border-red-100 hover:bg-red-50 hover:border-red-200 px-4 py-3.5 rounded-xl text-sm font-bold transition-colors shadow-sm">
+                                    ${icons.pdf} Sayfayı PDF İndir
                                 </button>
-                                <button onclick="window.exportSystemData()" class="flex items-center justify-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 px-4 py-3 rounded-lg text-sm font-bold transition shadow-sm">
-                                    ${icons.download} Sistemi Yedekle (.json)
+                                <button onclick="window.exportSystemData()" class="flex items-center justify-center gap-2.5 bg-white text-blue-600 border-2 border-blue-100 hover:bg-blue-50 hover:border-blue-200 px-4 py-3.5 rounded-xl text-sm font-bold transition-colors shadow-sm">
+                                    ${icons.download} Sistemi Yedekle
                                 </button>
                                 <div>
                                     <input type="file" id="upInput" class="hidden" onchange="window.importSystemData(event)" accept=".json">
-                                    <button onclick="document.getElementById('upInput').click()" class="w-full h-full flex items-center justify-center gap-2 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 px-4 py-3 rounded-lg text-sm font-bold transition shadow-sm">
+                                    <button onclick="document.getElementById('upInput').click()" class="w-full h-full flex items-center justify-center gap-2.5 bg-white text-green-600 border-2 border-green-100 hover:bg-green-50 hover:border-green-200 px-4 py-3.5 rounded-xl text-sm font-bold transition-colors shadow-sm">
                                         ${icons.upload} Yedek Yükle
                                     </button>
                                 </div>
@@ -1148,48 +1288,49 @@
             
             return `
                 <!-- Backdrop -->
-                <div class="fixed inset-0 bg-black/50 z-50 print:hidden transition-opacity" onclick="window.togglePanel()"></div>
+                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 print:hidden transition-opacity" onclick="window.togglePanel()"></div>
                 
                 <!-- Side Panel -->
-                <div class="fixed top-0 left-0 w-72 h-full bg-white shadow-2xl z-50 flex flex-col print:hidden fade-in" style="animation: slideIn 0.3s ease-out;">
+                <div class="fixed top-0 left-0 w-72 h-full bg-white shadow-2xl z-50 flex flex-col print:hidden fade-in" style="animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
                     <style>@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }</style>
-                    <div class="${currentSport.color} p-5 flex justify-between items-center text-white transition-colors duration-500">
-                        <h2 class="font-bold text-lg flex items-center gap-2">${icons.menu} Menü</h2>
-                        <button onclick="window.togglePanel()" class="p-1.5 hover:bg-white/20 rounded-md transition">${icons.x}</button>
+                    <div class="${currentSport.color} p-6 flex justify-between items-center text-white transition-colors duration-500 rounded-br-3xl">
+                        <h2 class="font-heading font-black text-xl flex items-center gap-3 tracking-wide">${icons.menu} MENÜ</h2>
+                        <button onclick="window.togglePanel()" class="p-2 hover:bg-white/20 rounded-xl transition-colors backdrop-blur-md bg-white/10">${icons.x}</button>
                     </div>
                     
-                    <div class="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
+                    <div class="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
                         
                         <!-- Genel (Ana Sayfa) -->
                         <div>
-                            <button onclick="window.handleNav('home')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition text-left ${state.currentView === 'home' ? currentSport.color + ' text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}">
-                                <div class="opacity-80">${icons.home}</div>
+                            <button onclick="window.handleNav('home')" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 text-left ${state.currentView === 'home' ? currentSport.color + ' text-white shadow-lg shadow-current/30 translate-x-2' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}">
+                                <div class="opacity-90">${icons.home}</div>
                                 Ana Sayfa (Kurallar)
                             </button>
                         </div>
 
-                        <hr class="border-gray-100 -my-2">
+                        <div class="h-px bg-gradient-to-r from-gray-100 via-gray-200 to-transparent"></div>
 
                         <!-- Branşlar -->
                         <div>
-                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-2">Spor Branşları</h3>
-                            <div class="flex flex-col gap-1">
+                            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 pl-3">Spor Branşları</h3>
+                            <div class="flex flex-col gap-1.5">
                                 ${Object.values(SPORTS).map(sport => `
-                                    <button onclick="window.handleNav('dashboard', '${sport.id}')" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition text-left ${state.activeSport === sport.id && state.currentView === 'dashboard' ? currentSport.color + ' text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}">
-                                        <div class="opacity-80">${sport.icon}</div>
+                                    <button onclick="window.handleNav('dashboard', '${sport.id}')" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300 text-left ${state.activeSport === sport.id && state.currentView === 'dashboard' ? currentSport.color + ' text-white shadow-lg shadow-current/30 translate-x-2' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}">
+                                        <div class="opacity-90">${sport.icon}</div>
                                         ${sport.name}
                                     </button>
                                 `).join('')}
                             </div>
                         </div>
 
-                        <hr class="border-gray-100">
+                        <div class="h-px bg-gradient-to-r from-gray-100 via-gray-200 to-transparent"></div>
 
                         <!-- Ayarlar -->
                         <div>
-                            <button onclick="window.handleNav('settings')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold transition text-left ${state.currentView === 'settings' ? currentSport.color + ' text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}">
-                                <div class="opacity-80">${icons.settings}</div>
-                                Sistem Ayarları
+                            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 pl-3">Sistem</h3>
+                            <button onclick="window.handleNav('settings')" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 text-left ${state.currentView === 'settings' ? 'bg-gray-800 text-white shadow-lg shadow-gray-800/30 translate-x-2' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}">
+                                <div class="opacity-90">${icons.settings}</div>
+                                Yönetim Paneli
                             </button>
                         </div>
                     </div>
@@ -1201,7 +1342,6 @@
             const app = document.getElementById('app');
             const currentSport = SPORTS[state.activeSport.toUpperCase()];
 
-            // Eksik veri yapılarını koruma
             if(!state.leagues.futbol_erkek) state.leagues.futbol_erkek = { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false };
             if(!state.leagues.futsal_erkek) state.leagues.futsal_erkek = { teams: [], fixtures: [], knockouts: JSON.parse(JSON.stringify(DEFAULT_KNOCKOUT)), isStarted: false, isPlanning: false };
 
@@ -1211,31 +1351,32 @@
                 });
             }
             
-            // DÜZELTME: Render sırasında yapının bozulmasını tamamen engelle
             state.rules = getSafeCategoryData(state.rules);
             state.predefinedTeams = getSafeCategoryData(state.predefinedTeams);
+            document.title = state.seasonName || '31. SITKI KOÇMAN REKTÖRLÜK KUPASI';
 
             let html = `
                 ${renderSidePanel()}
-                <!-- TEPE BARI -->
-                <div class="${currentSport.color} text-white p-4 shadow-lg sticky top-0 z-40 transition-colors duration-500 print:hidden relative">
+                <!-- TEPE BARI (Glassmorphism) -->
+                <div class="${currentSport.color} bg-opacity-95 backdrop-blur-md text-white p-4 shadow-lg sticky top-0 z-40 transition-colors duration-500 print:hidden relative border-b border-white/10">
                     <div class="max-w-7xl mx-auto flex justify-between items-center h-12 relative">
                         <!-- Menü Butonu (Sol) -->
-                        <button onclick="window.togglePanel()" class="p-2 hover:bg-white/20 rounded-md transition z-50">
+                        <button onclick="window.togglePanel()" class="p-2.5 hover:bg-white/20 rounded-xl transition-colors z-50 backdrop-blur-sm bg-white/10 shadow-sm border border-white/20 active:scale-95">
                             ${icons.menu}
                         </button>
                         
                         <!-- Başlık (Tam Orta) -->
-                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-3 w-full justify-center pointer-events-none">
-                            <div class="w-6 h-6 md:w-8 md:h-8">${icons.trophy}</div>
-                            <h1 class="text-lg md:text-2xl font-bold whitespace-nowrap">31. SITKI KOÇMAN REKTÖRLÜK KUPASI</h1>
+                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-[60%] sm:w-auto">
+                            <div class="w-6 h-6 md:w-8 md:h-8 hidden sm:block pointer-events-none mr-3 drop-shadow-md">${icons.trophy}</div>
+                            <h1 class="text-base sm:text-lg md:text-xl font-heading font-black whitespace-nowrap text-white tracking-wide drop-shadow-md">${state.seasonName}</h1>
                         </div>
 
                         <!-- KAYDETME DURUM GÖSTERGESİ (Sağ) -->
-                        <div id="save-status" class="z-50 text-[10px] md:text-xs font-medium text-right min-w-[100px] opacity-90"></div>
+                        <div id="save-status" class="z-50 text-[10px] md:text-xs font-medium text-right min-w-[90px] sm:min-w-[100px]"></div>
                     </div>
                 </div>
-                <div class="max-w-7xl mx-auto p-4 md:p-6 pb-20">
+
+                <div class="max-w-7xl mx-auto p-4 md:p-6 pb-24">
             `;
 
             if (state.currentView === 'home') {
@@ -1247,30 +1388,46 @@
                 if (!activeLeague.isStarted && activeLeague.fixtures.length === 0) {
                     if (state.isLoggedIn) {
                         html += `
-                            <div class="bg-white rounded-xl shadow-md p-6 max-w-2xl mx-auto border fade-in mt-4">
-                                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">${icons.users} Takım Kayıt (${currentSport.name})</h2>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                                    <input type="text" id="teamInput" list="teamDatalist" placeholder="Takım Adı Seç/Yaz" class="border rounded p-2 text-sm outline-none focus:ring-2 focus:ring-blue-400">
-                                    <select id="groupSelect" class="border rounded p-2 text-sm bg-white">
+                            <div class="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl p-8 max-w-2xl mx-auto border border-gray-100 fade-in mt-8">
+                                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-blue-100">
+                                    ${icons.users}
+                                </div>
+                                <h2 class="text-2xl font-heading font-black mb-6 text-gray-800 tracking-tight">Takım Kayıt <span class="text-blue-600 font-medium text-lg">(${currentSport.name})</span></h2>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                                    <input type="text" id="teamInput" list="teamDatalist" placeholder="Takım Adı Seç/Yaz" class="border border-gray-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-blue-400 shadow-inner bg-gray-50">
+                                    <select id="groupSelect" class="border border-gray-200 rounded-xl p-3 text-sm bg-gray-50 shadow-inner focus:ring-2 focus:ring-blue-400 outline-none font-medium text-gray-700">
                                         <option value="A">A Grubu</option><option value="B">B Grubu</option>
                                         <option value="C">C Grubu</option><option value="D">D Grubu</option>
                                     </select>
-                                    <input type="text" id="managerInput" placeholder="Yönetici" class="border rounded p-2 text-sm outline-none">
-                                    <input type="text" id="coachInput" placeholder="Antrenör" class="border rounded p-2 text-sm outline-none">
+                                    <input type="text" id="managerInput" placeholder="Yönetici (Opsiyonel)" class="border border-gray-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-blue-400 shadow-inner bg-gray-50">
+                                    <input type="text" id="coachInput" placeholder="Antrenör (Opsiyonel)" class="border border-gray-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-blue-400 shadow-inner bg-gray-50">
                                 </div>
-                                <button onclick="window.addTeam('teamInput', 'groupSelect', 'managerInput', 'coachInput')" class="w-full bg-blue-600 text-white py-2 rounded font-bold mb-6 hover:bg-blue-700 transition">+ Takım Ekle</button>
-                                <div class="space-y-2 mb-6 max-h-60 overflow-y-auto custom-scrollbar">
-                                    ${activeLeague.teams.map(t => `<div class="flex justify-between p-2 bg-gray-50 border rounded text-xs"><span>[${t.group}] <b>${t.name}</b></span><button onclick="window.removeTeam(${t.id})" class="text-red-500">${icons.trash}</button></div>`).join('')}
+                                <button onclick="window.addTeam('teamInput', 'groupSelect', 'managerInput', 'coachInput')" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold mb-8 hover:bg-blue-700 hover:shadow-lg active:scale-95 transition-all uppercase tracking-wide">Yeni Takım Ekle</button>
+                                
+                                <div class="space-y-2.5 mb-8 max-h-60 overflow-y-auto custom-scrollbar pr-2">
+                                    ${activeLeague.teams.map(t => `
+                                        <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl text-sm shadow-[0_2px_8px_-4px_rgba(0,0,0,0.1)] hover:border-blue-100 transition-colors">
+                                            <span class="font-medium text-gray-700"><span class="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-500 mr-2">${t.group}</span> ${t.name}</span>
+                                            <button onclick="window.removeTeam(${t.id})" class="text-red-400 hover:text-red-600 bg-red-50 p-2 rounded-lg transition-colors">${icons.trash}</button>
+                                        </div>
+                                    `).join('')}
                                 </div>
-                                <button onclick="window.startLeague()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold shadow-md hover:bg-green-700 transition">Ligi Başlat</button>
+                                
+                                <div class="pt-6 border-t border-gray-100">
+                                    <button onclick="window.startLeague()" class="w-full bg-green-500 text-white py-4 rounded-2xl font-black text-lg shadow-[0_4px_14px_0_rgb(34,197,94,0.39)] hover:shadow-[0_6px_20px_rgba(34,197,94,0.23)] hover:bg-green-600 active:scale-95 transition-all uppercase tracking-widest">
+                                        Ligi Resmen Başlat
+                                    </button>
+                                </div>
                             </div>
                         `;
                     } else {
                         html += `
-                            <div class="bg-white rounded-xl shadow-md p-12 max-w-2xl mx-auto border text-center fade-in mt-8">
-                                <div class="w-20 h-20 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-6">${icons.trophy}</div>
-                                <h2 class="text-2xl font-bold text-gray-800 mb-2">Lig Henüz Başlamadı</h2>
-                                <p class="text-gray-500 italic">Takımlar ve fikstür kesinleştiğinde veriler burada yayınlanacaktır.</p>
+                            <div class="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl p-12 max-w-2xl mx-auto border border-gray-100 text-center fade-in mt-12">
+                                <div class="w-24 h-24 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-100 shadow-inner">
+                                    <div class="scale-150">${icons.trophy}</div>
+                                </div>
+                                <h2 class="text-3xl font-heading font-black text-gray-800 mb-3 tracking-tight">Lig Henüz Başlamadı</h2>
+                                <p class="text-gray-500 font-medium">Takımlar ve fikstür kesinleştiğinde veriler burada yayınlanacaktır.</p>
                             </div>
                         `;
                     }
