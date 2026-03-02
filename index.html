@@ -6,20 +6,18 @@
     <title>31. SITKI KOÇMAN REKTÖRLÜK KUPASI</title>
     
     <script>
-        // Sadece uygulama kimliği bırakıldı, Firebase config aşağıya taşındı
         window.__app_id = "sitki-kocman-kupasi-v1";
     </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- YENİ: Modern Google Fontlar -->
+    <!-- Modern Google Fontlar -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* YENİ: Temel Fontlar ve Noktalı Arka Plan Deseni */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc;
@@ -39,9 +37,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
         
         .red-card-visual { width: 10px; height: 14px; background-color: #ef4444; display: inline-block; border-radius: 2px; margin-right: 6px; border: 1px solid #b91c1c; vertical-align: middle; }
-        
-        /* Dropdown okunu gizleme (Arşiv menüsü için - Şayet kullanılırsa) */
-        select.season-select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right .5rem center; background-size: 1.2em; padding-right: 2rem; }
     </style>
 </head>
 <body class="min-h-screen text-gray-800">
@@ -79,7 +74,7 @@
             FUTBOL_ERKEK: { id: 'futbol_erkek', name: 'Futbol Erkek', icon: icons.soccer, color: 'bg-green-600', unit: 'Gol', desc: 'G: 3, B: 1, M: 0 Puan' },
             FUTSAL_ERKEK: { id: 'futsal_erkek', name: 'Futsal Erkek', icon: icons.soccer, color: 'bg-teal-600', unit: 'Gol', desc: 'G: 3, B: 1, M: 0 Puan' },
             BASKETBOL_ERKEK: { id: 'basketbol_erkek', name: 'Basketbol Erkek', icon: icons.dribbble, color: 'bg-orange-500', unit: 'Sayı', desc: 'G: 2, M: 1 Puan' },
-            BASKETBOL_KADIN: { id: 'basketbol_kadin', name: 'Basketbol Kadın', icon: icons.dribbble, color: 'bg-orange-400', unit: 'Sayı', desc: 'G: 2, M: 1 Puan' },
+            BASKETBOL_KADIN: { id: 'basketbol_kadin', name: 'Basketbol Kad Kadın', icon: icons.dribbble, color: 'bg-orange-400', unit: 'Sayı', desc: 'G: 2, M: 1 Puan' },
             VOLEYBOL_ERKEK: { id: 'voleybol_erkek', name: 'Voleybol Erkek', icon: icons.users, color: 'bg-blue-600', unit: 'Set', desc: '3-0/3-1: (3p), 3-2: (2p-1p)' },
             VOLEYBOL_KADIN: { id: 'voleybol_kadin', name: 'Voleybol Kadın', icon: icons.users, color: 'bg-blue-500', unit: 'Set', desc: '3-0/3-1: (3p), 3-2: (2p-1p)' }
         };
@@ -99,7 +94,6 @@
             f: [{id: 'f1', h: '', a: '', hs: '', as: ''}]
         };
 
-        // --- YARDIMCI GÜVENLİK (SANITIZATION) FONKSİYONU ---
         function getSafeCategoryData(data) {
             const safeObj = { futbol: [], futsal: [], basketbol: [], voleybol: [] };
             if (data && typeof data === 'object' && !Array.isArray(data)) {
@@ -112,7 +106,6 @@
             return safeObj;
         }
 
-        // --- ŞİFRELEME (HASH) FONKSİYONU ---
         async function hashPassword(password) {
             const encoder = new TextEncoder();
             const data = encoder.encode(password);
@@ -121,7 +114,6 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // UYGULAMA DURUMU (STATE)
         let state = {
             currentView: 'home', 
             isLoggedIn: false,
@@ -148,7 +140,6 @@
             }
         };
 
-        // --- FIREBASE ENTEGRASYONU VE DURUM TAKİBİ ---
         let db;
         let currentUser = null;
         let isRemoteUpdate = false;
@@ -191,18 +182,13 @@
                         try {
                             await signInWithCustomToken(auth, initialAuthToken);
                         } catch (tokenError) {
-                            console.warn("Özel token hatası, anonim girişe dönülüyor:", tokenError);
                             await signInAnonymously(auth);
                         }
                     } else {
                         await signInAnonymously(auth);
                     }
                 } catch (authError) {
-                    if (authError.code === 'auth/configuration-not-found') {
-                        console.warn("BİLGİLENDİRME: Firebase Console'da 'Anonymous' (Anonim) giriş aktif değil.");
-                    } else {
-                        console.error("Kimlik doğrulama hatası:", authError);
-                    }
+                    console.error("Kimlik doğrulama hatası:", authError);
                 }
 
                 listenToState();
@@ -230,7 +216,11 @@
                     
                     isRemoteUpdate = true;
                     try {
-                        render();
+                        // DÜZELTME: Veri tabanından (Firebase) gelen anlık güncelleme eğer bizim girdiğimiz
+                        // skor yüzünden geldiyse, odak kaybetmemek için ekran çizimini atlar/geciktiririz.
+                        if (!window.skipNextSnapshotRender) {
+                            render();
+                        }
                     } finally {
                         isRemoteUpdate = false;
                     }
@@ -238,8 +228,7 @@
                     saveState();
                 }
             }, (err) => {
-                console.error("Firestore Dinleme Hatası:", err);
-                saveError = "Veritabanı Okuma İzni Yok (Kuralları Kontrol Edin)";
+                saveError = "Veritabanı Okuma İzni Yok";
                 if(window.renderSaveStatus) window.renderSaveStatus();
             });
         }
@@ -264,7 +253,6 @@
                 await setDoc(docRef, safeStateToSave);
                 saveError = null;
             } catch (error) {
-                console.error("Firestore Kaydetme Hatası:", error);
                 saveError = "Yetki/Kural Hatası veya Kota Dolumu";
             } finally {
                 isSaving = false;
@@ -348,8 +336,6 @@
             return `${day}.${month}.${year} ${dayName}`;
         }
 
-        // --- GLOBAL ERİŞİM İÇİN FONKSİYONLARI WİNDOW'A ATA ---
-        
         window.renderSaveStatus = function() {
             const el = document.getElementById('save-status');
             if(!el) return;
@@ -553,13 +539,39 @@
             league.fixtures.forEach(r => { const m = r.matches.find(match => match.id === matchId); if(m && m.cards) m.cards = m.cards.filter(c => c.id !== cardId); });
             saveState(); render();
         };
+
+        // DÜZELTME: Skor girilirken TAB ve TIKLAMA sorununu kökten çözen gecikme mantığı eklendi
         window.updateScore = function(roundIndex, matchId, type, value) {
             const league = state.leagues[state.activeSport];
             const match = league.fixtures[roundIndex]?.matches.find(m => m.id === matchId);
-            if (match) { match[type] = value; saveState(); render(); }
+            if (match) { 
+                match[type] = value; 
+                
+                // Firestore dinleyicisinin bizi anında bölmesini durduruyoruz
+                window.skipNextSnapshotRender = true;
+                saveState(); 
+                
+                // Tarayıcıya diğer kutucuğa geçmesi için 150ms süre veriyoruz
+                if(window.renderTimeout) clearTimeout(window.renderTimeout);
+                window.renderTimeout = setTimeout(() => {
+                    window.skipNextSnapshotRender = false;
+                    render();
+                }, 150);
+            }
         };
+
+        // DÜZELTME: Şampiyonluk ağacındaki skor geçişlerini de çözüyoruz
         window.updateKnockout = function(stage, index, field, value) {
-            state.leagues[state.activeSport].knockouts[stage][index][field] = value; saveState(); render();
+            state.leagues[state.activeSport].knockouts[stage][index][field] = value; 
+            
+            window.skipNextSnapshotRender = true;
+            saveState(); 
+            
+            if(window.renderTimeout) clearTimeout(window.renderTimeout);
+            window.renderTimeout = setTimeout(() => {
+                window.skipNextSnapshotRender = false;
+                render();
+            }, 150);
         };
 
         window.exportPDF = function() {
@@ -765,7 +777,6 @@
                 { id: 'voleybol', name: 'Voleybol', icon: icons.users }
             ];
             
-            // YENİ: Sekmeler hap (pill) tasarımına geçirildi
             let tabButtonsHtml = tabs.map(tab => `
                 <button onclick="window.setActiveRuleTab('${tab.id}')" 
                         class="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold transition-all duration-300 whitespace-nowrap border-2 ${state.activeRuleTab === tab.id ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-200 transform scale-105' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-100'}">
@@ -794,7 +805,6 @@
 
             const activeTabName = tabs.find(t => t.id === state.activeRuleTab)?.name || 'Futbol';
 
-            // Duyurular Panosu (Daha modern)
             let annHtml = `
             <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 mb-8 relative shadow-sm print:hidden fade-in">
                 <h3 class="font-heading font-extrabold text-amber-800 text-sm mb-4 flex items-center gap-2 tracking-wide uppercase">📢 Duyurular & Son Dakika</h3>
@@ -864,7 +874,6 @@
                 const hName = getTeam(match.h, state.activeSport).name;
                 const aName = getTeam(match.a, state.activeSport).name;
 
-                // YENİ: Kazanan Takım Vurgusu
                 let isHomeWinner = false;
                 let isAwayWinner = false;
                 let isPlayed = match.hs !== '' && match.as !== '';
@@ -880,18 +889,18 @@
                     return `
                         <div class="bg-white border-2 border-gray-100 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow text-xs">
                             <div class="flex gap-2 items-center mb-2">
-                                <select class="w-full border border-gray-200 rounded-lg p-1.5 outline-none bg-gray-50 focus:ring-2 focus:ring-blue-400 font-medium ${isHomeWinner ? 'text-gray-900 font-bold' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'h', this.value)">
+                                <select id="ko_h_${stage}_${index}" class="w-full border border-gray-200 rounded-lg p-1.5 outline-none bg-gray-50 focus:ring-2 focus:ring-blue-400 font-medium ${isHomeWinner ? 'text-gray-900 font-bold' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'h', this.value)">
                                     <option value="">Ev Sahibi Seç</option>
                                     ${teams.map(t => `<option value="${t.id}" ${match.h == t.id ? 'selected' : ''}>[${t.group}] ${t.name}</option>`).join('')}
                                 </select>
-                                <input type="number" value="${match.hs}" class="w-12 h-8 text-center border border-gray-200 rounded-lg bg-gray-50 font-heading font-bold focus:ring-2 focus:ring-blue-400 outline-none ${isHomeWinner ? 'bg-green-50 text-green-700' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'hs', this.value)">
+                                <input id="ko_hs_${stage}_${index}" type="number" value="${match.hs}" class="w-12 h-8 text-center border border-gray-200 rounded-lg bg-gray-50 font-heading font-bold focus:ring-2 focus:ring-blue-400 outline-none ${isHomeWinner ? 'bg-green-50 text-green-700' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'hs', this.value)">
                             </div>
                             <div class="flex gap-2 items-center">
-                                <select class="w-full border border-gray-200 rounded-lg p-1.5 outline-none bg-gray-50 focus:ring-2 focus:ring-blue-400 font-medium ${isAwayWinner ? 'text-gray-900 font-bold' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'a', this.value)">
+                                <select id="ko_a_${stage}_${index}" class="w-full border border-gray-200 rounded-lg p-1.5 outline-none bg-gray-50 focus:ring-2 focus:ring-blue-400 font-medium ${isAwayWinner ? 'text-gray-900 font-bold' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'a', this.value)">
                                     <option value="">Deplasman Seç</option>
                                     ${teams.map(t => `<option value="${t.id}" ${match.a == t.id ? 'selected' : ''}>[${t.group}] ${t.name}</option>`).join('')}
                                 </select>
-                                <input type="number" value="${match.as}" class="w-12 h-8 text-center border border-gray-200 rounded-lg bg-gray-50 font-heading font-bold focus:ring-2 focus:ring-blue-400 outline-none ${isAwayWinner ? 'bg-green-50 text-green-700' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'as', this.value)">
+                                <input id="ko_as_${stage}_${index}" type="number" value="${match.as}" class="w-12 h-8 text-center border border-gray-200 rounded-lg bg-gray-50 font-heading font-bold focus:ring-2 focus:ring-blue-400 outline-none ${isAwayWinner ? 'bg-green-50 text-green-700' : ''}" onchange="window.updateKnockout('${stage}', ${index}, 'as', this.value)">
                             </div>
                         </div>
                     `;
@@ -963,13 +972,11 @@
                             </div>
                             ` : ''}
 
-                            <!-- Gruplar ve Eleme Aşaması tek PDF bloğuna alındı -->
                             <div id="pdf-content" class="bg-transparent rounded-xl">
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                                     ${['A','B','C','D'].map(g => getGroupTableHTML(g)).join('')}
                                 </div>
                                 
-                                <!-- ELEME AŞAMASI -->
                                 <div class="mt-8 pt-2">
                                     ${renderKnockout(true)}
                                 </div>
@@ -983,10 +990,9 @@
                                     ${state.isLoggedIn ? `<button onclick="window.toggleMatchForm()" class="bg-green-600 text-white px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-md hover:bg-green-700 active:scale-95 transition-all print:hidden">${state.showMatchForm ? 'Kapat' : '+ Yeni Maç'}</button>` : ''}
                                 </div>
                                 
-                                <!-- FİKSTÜR FİLTRELEME -->
                                 <div class="bg-gray-50/80 px-5 py-3 border-b border-gray-100 flex justify-between items-center print:hidden z-10">
                                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Filtrele:</span>
-                                    <select onchange="window.setFixtureFilter(this.value)" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white font-bold text-gray-600 focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm">
+                                    <select id="fixtureFilterSelect" onchange="window.setFixtureFilter(this.value)" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white font-bold text-gray-600 focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm">
                                         <option value="ALL" ${state.fixtureFilter === 'ALL' ? 'selected' : ''}>Tüm Maçlar</option>
                                         <option value="A" ${state.fixtureFilter === 'A' ? 'selected' : ''}>A Grubu</option>
                                         <option value="B" ${state.fixtureFilter === 'B' ? 'selected' : ''}>B Grubu</option>
@@ -1039,7 +1045,6 @@
                                                     const cardFormOpen = state.activeCardMatchId === match.id;
                                                     const isReadOnly = !state.isLoggedIn;
                                                     
-                                                    // YENİ: Kazanan Takım Vurgusu Hesaplaması
                                                     let isHomeWinner = false;
                                                     let isAwayWinner = false;
                                                     let isPlayed = match.homeScore !== '' && match.awayScore !== '';
@@ -1054,11 +1059,9 @@
                                                     let homeTextClass = isHomeWinner ? "text-[15px] font-black text-gray-900 drop-shadow-sm scale-105 origin-right" : (isAwayWinner ? "text-sm font-medium text-gray-400 opacity-80" : "text-sm font-bold text-gray-800");
                                                     let awayTextClass = isAwayWinner ? "text-[15px] font-black text-gray-900 drop-shadow-sm scale-105 origin-left" : (isHomeWinner ? "text-sm font-medium text-gray-400 opacity-80" : "text-sm font-bold text-gray-800");
                                                     
-                                                    // YENİ: Skor Kutusu Renklendirmesi
                                                     let homeInputClass = isHomeWinner ? "bg-green-50 border-green-200 text-green-700" : (isPlayed ? "bg-gray-50 border-gray-100 text-gray-500" : "bg-white border-gray-200 text-gray-800");
                                                     let awayInputClass = isAwayWinner ? "bg-green-50 border-green-200 text-green-700" : (isPlayed ? "bg-gray-50 border-gray-100 text-gray-500" : "bg-white border-gray-200 text-gray-800");
 
-                                                    // YENİ: Maç Kartı (Ticket) Tasarımı
                                                     return `
                                                     <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] hover:shadow-md hover:-translate-y-1 transition-all duration-300 relative group/match">
                                                         ${state.isLoggedIn ? `<button onclick="window.removeFixtureMatch('${match.id}')" class="absolute -top-2 -right-2 bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all p-1.5 rounded-full shadow-sm border border-red-200 print:hidden opacity-0 group-hover/match:opacity-100 z-20" title="Maçı Sil">${icons.trash}</button>` : ''}
@@ -1074,9 +1077,9 @@
                                                             <span class="${homeTextClass} w-[40%] text-right truncate transition-all duration-300" title="${h.name}"> ${h.name}</span>
                                                             
                                                             <div class="flex items-center gap-1.5 bg-gray-50/50 p-1.5 rounded-xl border border-gray-100 shadow-inner">
-                                                                <input type="number" ${isReadOnly ? 'readonly' : ''} value="${match.homeScore}" onchange="window.updateScore(${rIndex}, '${match.id}', 'homeScore', this.value)" class="w-10 h-10 text-center rounded-lg text-xl font-heading font-black outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${isReadOnly ? 'bg-transparent border-none ' + (isHomeWinner ? 'text-green-600' : '') : homeInputClass + ' shadow-sm'}">
+                                                                <input id="homeScore_${match.id}" type="number" ${isReadOnly ? 'readonly' : ''} value="${match.homeScore}" onchange="window.updateScore(${rIndex}, '${match.id}', 'homeScore', this.value)" class="w-10 h-10 text-center rounded-lg text-xl font-heading font-black outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${isReadOnly ? 'bg-transparent border-none ' + (isHomeWinner ? 'text-green-600' : '') : homeInputClass + ' shadow-sm'}">
                                                                 <span class="text-gray-300 font-black text-lg">:</span>
-                                                                <input type="number" ${isReadOnly ? 'readonly' : ''} value="${match.awayScore}" onchange="window.updateScore(${rIndex}, '${match.id}', 'awayScore', this.value)" class="w-10 h-10 text-center rounded-lg text-xl font-heading font-black outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${isReadOnly ? 'bg-transparent border-none ' + (isAwayWinner ? 'text-green-600' : '') : awayInputClass + ' shadow-sm'}">
+                                                                <input id="awayScore_${match.id}" type="number" ${isReadOnly ? 'readonly' : ''} value="${match.awayScore}" onchange="window.updateScore(${rIndex}, '${match.id}', 'awayScore', this.value)" class="w-10 h-10 text-center rounded-lg text-xl font-heading font-black outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${isReadOnly ? 'bg-transparent border-none ' + (isAwayWinner ? 'text-green-600' : '') : awayInputClass + ' shadow-sm'}">
                                                             </div>
                                                             
                                                             <span class="${awayTextClass} w-[40%] text-left truncate transition-all duration-300" title="${a.name}"> ${a.name}</span>
@@ -1159,7 +1162,6 @@
                             <button onclick="window.logout()" class="text-xs bg-red-50 text-red-600 border border-red-100 px-4 py-2 rounded-xl font-bold hover:bg-red-500 hover:text-white active:scale-95 transition-all shadow-sm">Oturumu Kapat</button>
                         </div>
                         
-                        <!-- ÖN TANIMLI TAKIMLAR YÖNETİMİ -->
                         <div class="mt-4">
                             <h3 class="text-lg font-bold text-gray-800 mb-1">Ön Tanımlı Takım Listeleri</h3>
                             <p class="text-xs text-gray-500 mb-6 font-medium">Aşağıda oluşturduğunuz listeler, takım ekleme ekranlarında hızlı seçim (açılır menü) olarak görünecektir.</p>
@@ -1281,16 +1283,13 @@
             `;
         }
 
-        // --- SOL PANEL (DRAWER) ---
         function renderSidePanel() {
             if (!state.isPanelOpen) return '';
             const currentSport = SPORTS[state.activeSport.toUpperCase()];
             
             return `
-                <!-- Backdrop -->
                 <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 print:hidden transition-opacity" onclick="window.togglePanel()"></div>
                 
-                <!-- Side Panel -->
                 <div class="fixed top-0 left-0 w-72 h-full bg-white shadow-2xl z-50 flex flex-col print:hidden fade-in" style="animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
                     <style>@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }</style>
                     <div class="${currentSport.color} p-6 flex justify-between items-center text-white transition-colors duration-500 rounded-br-3xl">
@@ -1300,7 +1299,6 @@
                     
                     <div class="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
                         
-                        <!-- Genel (Ana Sayfa) -->
                         <div>
                             <button onclick="window.handleNav('home')" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 text-left ${state.currentView === 'home' ? currentSport.color + ' text-white shadow-lg shadow-current/30 translate-x-2' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}">
                                 <div class="opacity-90">${icons.home}</div>
@@ -1310,7 +1308,6 @@
 
                         <div class="h-px bg-gradient-to-r from-gray-100 via-gray-200 to-transparent"></div>
 
-                        <!-- Branşlar -->
                         <div>
                             <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 pl-3">Spor Branşları</h3>
                             <div class="flex flex-col gap-1.5">
@@ -1325,7 +1322,6 @@
 
                         <div class="h-px bg-gradient-to-r from-gray-100 via-gray-200 to-transparent"></div>
 
-                        <!-- Ayarlar -->
                         <div>
                             <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 pl-3">Sistem</h3>
                             <button onclick="window.handleNav('settings')" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 text-left ${state.currentView === 'settings' ? 'bg-gray-800 text-white shadow-lg shadow-gray-800/30 translate-x-2' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}">
@@ -1339,6 +1335,19 @@
         }
 
         function render() {
+            // YENİ: Tarayıcının şu an hangi inputta olduğunu ve seçili alanı hafızaya al
+            const activeElement = document.activeElement;
+            const activeElementId = activeElement ? activeElement.id : null;
+            let selectionStart = null;
+            let selectionEnd = null;
+            
+            if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+                try {
+                    selectionStart = activeElement.selectionStart;
+                    selectionEnd = activeElement.selectionEnd;
+                } catch(e) {}
+            }
+
             const app = document.getElementById('app');
             const currentSport = SPORTS[state.activeSport.toUpperCase()];
 
@@ -1357,21 +1366,17 @@
 
             let html = `
                 ${renderSidePanel()}
-                <!-- TEPE BARI (Glassmorphism) -->
                 <div class="${currentSport.color} bg-opacity-95 backdrop-blur-md text-white p-4 shadow-lg sticky top-0 z-40 transition-colors duration-500 print:hidden relative border-b border-white/10">
                     <div class="max-w-7xl mx-auto flex justify-between items-center h-12 relative">
-                        <!-- Menü Butonu (Sol) -->
                         <button onclick="window.togglePanel()" class="p-2.5 hover:bg-white/20 rounded-xl transition-colors z-50 backdrop-blur-sm bg-white/10 shadow-sm border border-white/20 active:scale-95">
                             ${icons.menu}
                         </button>
                         
-                        <!-- Başlık (Tam Orta) -->
                         <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-[60%] sm:w-auto">
                             <div class="w-6 h-6 md:w-8 md:h-8 hidden sm:block pointer-events-none mr-3 drop-shadow-md">${icons.trophy}</div>
                             <h1 class="text-base sm:text-lg md:text-xl font-heading font-black whitespace-nowrap text-white tracking-wide drop-shadow-md">${state.seasonName}</h1>
                         </div>
 
-                        <!-- KAYDETME DURUM GÖSTERGESİ (Sağ) -->
                         <div id="save-status" class="z-50 text-[10px] md:text-xs font-medium text-right min-w-[90px] sm:min-w-[100px]"></div>
                     </div>
                 </div>
@@ -1439,7 +1444,19 @@
             html += `</div>`;
             app.innerHTML = html;
             
-            // Ekran yenilendiğinde kaydetme durumunu tekrar bas
+            // YENİ: Ekran render edildikten sonra odağı ve imleç pozisyonunu geri koyuyoruz
+            if (activeElementId) {
+                const elToFocus = document.getElementById(activeElementId);
+                if (elToFocus) {
+                    elToFocus.focus();
+                    try {
+                        if (selectionStart !== null && selectionEnd !== null) {
+                            elToFocus.setSelectionRange(selectionStart, selectionEnd);
+                        }
+                    } catch(e) {}
+                }
+            }
+
             if(window.renderSaveStatus) window.renderSaveStatus();
         }
 
